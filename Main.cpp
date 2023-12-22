@@ -15,8 +15,8 @@ int main()
 {
     Bitboards *bitboards = new Bitboards();
     bitboards->write_boards_from_FEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR|0");
-
-    printArray(bitboards->get_boards(), 12);
+    bitboards->get_legal_moves();
+    //printArray(bitboards->get_boards(), 12);
 
     return 0;
 }

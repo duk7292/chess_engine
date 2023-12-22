@@ -95,14 +95,25 @@ int Bitboards::get_turn()
 }
 
 
-u_int16_t *Bitboards::get_legal_king_moves()
+u_int16_t *Bitboards::get_legal_rook_moves()
 {
+    std::vector<uint16_t> legal_moves;
+    legal_moves.reserve(16);
+    
+    int8_t board_index = turn == 0 ? 3 : 9;
+
+    uint64_t rooks_board = boards[board_index];
+
+    
+
+
+    std::cout << static_cast<int>(board_index) << std::endl;
+
     return nullptr;
 }
 
-
-
 uint16_t *Bitboards::get_legal_moves()
 {
+    get_legal_rook_moves();
     return nullptr;
 }

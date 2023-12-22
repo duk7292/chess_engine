@@ -3,14 +3,16 @@
 #include <cstdint>
 #include <string>
 #include <iostream>
- #include <cstring>
+#include <cstring>
+#include <vector>
+
 class Bitboards
 {
 private:
     uint64_t boards[12];
     int turn;
 
-    u_int16_t *get_legal_king_moves();
+    u_int16_t *get_legal_rook_moves();
     
 
 public:
