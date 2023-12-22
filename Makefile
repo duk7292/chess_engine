@@ -8,13 +8,13 @@ CXXFLAGS = -Wall -g
 TARGET = bin/main
 
 # Source files
-SOURCES = $(wildcard *.cpp)
+SOURCES = $(wildcard *.cpp) $(wildcard Chess_Library/*.cpp)
 
 # Object files directory
 OBJDIR = obj
 
 # Object files
-OBJECTS = $(patsubst %.cpp,$(OBJDIR)/%.o,$(SOURCES))
+OBJECTS = $(SOURCES:%.cpp=$(OBJDIR)/%.o)
 
 # Build rule
 $(TARGET): $(OBJECTS)
@@ -23,7 +23,7 @@ $(TARGET): $(OBJECTS)
 
 # Compile rule
 $(OBJDIR)/%.o: %.cpp
-	mkdir -p $(OBJDIR)
+	mkdir -p $(dir $@)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 # Clean rule
