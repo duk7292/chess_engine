@@ -1,0 +1,12 @@
+// Index 0: White Pawns
+// Index 1: White Knights
+// Index 2: White Bishops
+// Index 3: White Rooks
+// Index 4: White Queens
+// Index 5: White King
+// Index 6: Black Pawns
+// Index 7: Black Knights
+// Index 8: Black Bishops
+// Index 9: Black Rooks
+// Index 10: Black Queens
+// Index 11: Black King

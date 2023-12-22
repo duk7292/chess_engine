@@ -14,7 +14,7 @@ void printArray(const uint64_t *arr, size_t size)
 int main()
 {
     Bitboards *bitboards = new Bitboards();
-    bitboards->write_boards_from_FEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR");
+    bitboards->write_boards_from_FEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR|0");
 
     printArray(bitboards->get_boards(), 12);
 
