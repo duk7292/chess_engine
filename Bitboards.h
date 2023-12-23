@@ -5,14 +5,14 @@
 #include <iostream>
 #include <cstring>
 #include <vector>
-
+#include <bitset>
 class Bitboards
 {
 private:
     uint64_t boards[12];
-    int turn;
+    int turn = 0;
 
-    u_int16_t *get_legal_rook_moves();
+    uint16_t *get_legal_rook_moves();
     
 
 public:
@@ -23,7 +23,7 @@ public:
     void copy_state(Bitboards *bitboards);
     uint64_t *get_boards();
     int get_turn();
-    u_int16_t *get_legal_moves();
+    uint16_t *get_legal_moves();
 };
 
 #endif

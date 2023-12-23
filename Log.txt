@@ -1,0 +1,4 @@
+23.12.2023
+    Ich habe alles aufgesetzt und die grobe Struktur geplant.
+    ich habe mit der legal moves Berechnung Angefangen welche ich alle in einem Array speichere
+    ich teile diese auf angefangen mit den rooks.
