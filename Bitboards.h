@@ -6,24 +6,27 @@
 #include <cstring>
 #include <vector>
 #include <bitset>
+#include <chrono>
 class Bitboards
 {
 private:
     uint64_t boards[12];
     int turn = 0;
 
-    uint16_t *get_legal_rook_moves();
-    
+    std::vector<uint16_t> get_legal_rook_moves();
+    std::vector<uint16_t> get_legal_bishop_moves();
+    std::vector<uint16_t> get_legal_queen_moves();
+    std::vector<uint16_t> get_legal_knight_moves();
 
 public:
-    Bitboards(/* args */);
+    Bitboards();
     ~Bitboards();
 
     void write_boards_from_FEN(std::string FEN);
     void copy_state(Bitboards *bitboards);
     uint64_t *get_boards();
     int get_turn();
-    uint16_t *get_legal_moves();
+    std::vector<uint16_t> get_legal_moves();
 };
 
 #endif
