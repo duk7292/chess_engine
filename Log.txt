@@ -2,3 +2,6 @@
     Ich habe alles aufgesetzt und die grobe Struktur geplant.
     ich habe mit der legal moves Berechnung Angefangen welche ich alle in einem Array speichere
     ich teile diese auf angefangen mit den rooks.
+    außerdem habe ich die legalen moves des bishops und der queen gemacht.
+24.12.2023
+    ich habe die legalen moves der knights berchnet
