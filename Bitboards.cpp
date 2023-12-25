@@ -669,22 +669,62 @@ std::vector<uint16_t> Bitboards::get_legal_queen_moves()
 std::vector<uint16_t> Bitboards::get_legal_knight_moves()
 {
     std::vector<uint16_t> legal_moves;
-    legal_moves.reserve(32);
-
+    legal_moves.reserve(8);
+    int8_t move_offsets[8] = {-17, -15, -10, -6, 6, 10, 15, 17};
     int8_t knight_board_index = turn == 0 ? 7 : 1;
     for (int8_t knight_pos = 0; knight_pos < 64; knight_pos++)
     {
         if ((boards[knight_board_index] & (1ULL << knight_pos)) != 0)
         {
+
+            for (int move_idx = 0; move_idx < 8; move_idx++)
+            {
+
+                if (knight_pos + move_offsets[move_idx] < 0 || knight_pos + move_offsets[move_idx] >= 64)
+                {
+
+                    continue;
                 }
+                // works dont touch !!!
+                int8_t rows_up = (int)((move_offsets[move_idx] * 1.69) / 10);
+
+                if (((int)(((knight_pos) + move_offsets[move_idx]) / 8)) - ((int)((knight_pos) / 8)) != rows_up)
+                {
+
+                    continue;
+                }
+                bool valid_move = true;
+                for (int8_t board_idx = 0; board_idx < 12; board_idx++)
+                {
+                    if ((boards[board_idx] & (1ULL << (knight_pos + move_offsets[move_idx]))) != 0)
+                    {
+                        if ((turn == 0 && board_idx <= 5) || (turn == 1 && board_idx > 5))
+                        {
+                            break;
+                        }
+                        else
+                        {
+                            valid_move = false;
+                            break;
+                        }
+                    }
+                }
+                if (valid_move)
+                {
+                    uint16_t move = 0;
+                    move |= (knight_pos & 0x3F);
+                    move |= ((knight_pos + move_offsets[move_idx]) & 0x3F) << 6;
+                    legal_moves.push_back(move);
+                }
+            }
+        }
     }
+    return legal_moves;
 }
 std::vector<uint16_t> Bitboards::get_legal_moves()
 {
 
-    // ...
-
-    auto start = std::chrono::high_resolution_clock::now();
+    /*auto start = std::chrono::high_resolution_clock::now();
     for (int i = 0; i < 1000000; i++)
     {
         std::vector<uint16_t> vec = get_legal_rook_moves();
@@ -695,10 +735,10 @@ std::vector<uint16_t> Bitboards::get_legal_moves()
     auto end = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
 
-    std::cout << "Execution time: " << duration.count() << " microseconds" << std::endl;
+    std::cout << "Execution time: " << duration.count() << " microseconds" << std::endl;*/
 
-    // ...
-    std::vector<uint16_t> vec = get_legal_queen_moves();
+    std::vector<uint16_t> vec = get_legal_knight_moves();
+    std::cout << vec.size() << std::endl;
     for (int i = 0; i < vec.size(); i++)
     {
         std::cout << std::bitset<16>(vec[i]) << std::endl;
