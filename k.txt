@@ -3,3 +3,8 @@ out1,out2,out3
 frage1
 -a {-1,0,3}
 -b {-1,4,2}
+
+
+
+rnbqkbnr/1ppppppN/6p1/8/8/8/PPPPPPPP/R1BQKB1R|kq|KQ|--|1
+

@@ -74,7 +74,27 @@ void Bitboards::write_boards_from_FEN(std::string FEN)
         }
     }
     turn = std::stoi(std::string(1, FEN[FEN.length() - 1]));
-    std::cout << "turn: " << turn << std::endl;
+    if (FEN[FEN.length() - 6] == '-')
+    {
+        castling[3] = false;
+    }
+    if (FEN[FEN.length() - 7] == '-')
+    {
+        castling[2] = false;
+    }
+    if (FEN[FEN.length() - 9] == '-')
+    {
+        castling[1] = false;
+    }
+    if (FEN[FEN.length() - 10] == '-')
+    {
+        castling[0] = false;
+    }
+    if (FEN[FEN.length() - 3] != '-')
+    {
+        std::string numberStr = FEN.substr(FEN.length() - 4, 2);
+        en_passant = std::stoi(numberStr);
+    }
 }
 
 void Bitboards::copy_state(Bitboards *bitboards)
@@ -721,6 +741,91 @@ std::vector<uint16_t> Bitboards::get_legal_knight_moves()
     }
     return legal_moves;
 }
+
+std::vector<uint16_t> Bitboards::get_legal_pawn_moves()
+{
+    std::vector<uint16_t> legal_moves;
+    legal_moves.reserve(8);
+    int8_t pawn_board_index = turn == 0 ? 6 : 0;
+    int8_t enemy_pawn_board_index = turn == 0 ? 0 : 6;
+    for (int8_t pawn_pos = 0; pawn_pos < 64; pawn_pos++)
+    {
+        if ((boards[pawn_board_index] & (1ULL << pawn_pos)) != 0)
+        {
+            int8_t move_offset = turn == 0 ? 8 : -8;
+            bool step1 = true;
+            bool step2 = true;
+            bool kill_left = false;
+            bool kill_right = false;
+            bool en_passant_left = false;
+            bool en_passant_right = false;
+            bool pawn_promotion = false;
+            for (int board_idx = 0; board_idx < 12; board_idx++)
+            {
+                if ((boards[board_idx] & (1ULL << (pawn_pos + move_offset))) != 0)
+                {
+
+                    step1 = false;
+                    break;
+                }
+                if ((boards[board_idx] & (1ULL << (pawn_pos + (2 * move_offset)))) != 0 && (turn == 0 && pawn_pos >= 48 && pawn_pos <= 55) || (turn == 1 && pawn_pos >= 8 && pawn_pos <= 15))
+                {
+                    step2 = false;
+                    break;
+                }
+                if ((turn == 0 && board_idx > 5) || (turn == 1 && board_idx <= 5))
+                {
+                    if (boards[board_idx] & (1ULL << (pawn_pos + move_offset - 1)))
+                    {
+                        kill_left = true;
+                    }
+                    if (boards[board_idx] & (1ULL << (pawn_pos + move_offset + 1)))
+                    {
+                        kill_right = true;
+                    }
+                }
+            }
+            if (en_passant == pawn_pos + move_offset - 1)
+            {
+                en_passant_left = true;
+            }
+            if (en_passant == pawn_pos + move_offset + 1)
+            {
+                en_passant_right = true;
+            }
+
+            if (step1)
+            {
+                uint16_t move = 0;
+                move |= (pawn_pos & 0x3F);
+                move |= ((pawn_pos + move_offset) & 0x3F) << 6;
+                legal_moves.push_back(move);
+            }
+            if (step2)
+            {
+                uint16_t move = 0;
+                move |= (pawn_pos & 0x3F);
+                move |= ((pawn_pos + (2 * move_offset)) & 0x3F) << 6;
+                legal_moves.push_back(move);
+            }
+            if (kill_left)
+            {
+                uint16_t move = 0;
+                move |= (pawn_pos & 0x3F);
+                move |= ((pawn_pos + move_offset - 1) & 0x3F) << 6;
+                legal_moves.push_back(move);
+            }
+            if (kill_right)
+            {
+                uint16_t move = 0;
+                move |= (pawn_pos & 0x3F);
+                move |= ((pawn_pos + move_offset + 1) & 0x3F) << 6;
+                legal_moves.push_back(move);
+            }
+        }
+    }
+}
+
 std::vector<uint16_t> Bitboards::get_legal_moves()
 {
 
