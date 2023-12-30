@@ -1,0 +1,29 @@
+|ḿ| = brechne_gegner_moves_no_king()
+|kḿ| = brechne_gegner_king_moves()
+
+|Ḿ| = |kḿ| + |ḿ|
+
+is_check = is_king_check(|Ḿ|)
+
+if(is_check){
+    M = get_check_moves()
+
+}
+else{
+    vec king_prot_lines = cal_king_prot_lines()
+    
+
+    m = get_moves
+    (king_prot_lines)
+
+
+    km = get_king_moves(|Ḿ|)
+
+
+    M = m+km
+
+}
+
+
+6        3   6       6              32_bit_int
+pos_king dir pos_fig pos_attacker   = king_prot_lines

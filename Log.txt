@@ -5,3 +5,8 @@
     außerdem habe ich die legalen moves des bishops und der queen gemacht.
 24.12.2023
     ich habe die legalen moves der knights berchnet
+25.12.2023
+    ich habe die legal pawn moves angefangen dafür habe ich meine custom FEN strings erweitert
+26.12.2023 
+    ich habe die legal pawn moves beendet
+

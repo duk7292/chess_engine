@@ -745,21 +745,17 @@ std::vector<uint16_t> Bitboards::get_legal_knight_moves()
 std::vector<uint16_t> Bitboards::get_legal_pawn_moves()
 {
     std::vector<uint16_t> legal_moves;
-    legal_moves.reserve(8);
+    legal_moves.reserve(16);
     int8_t pawn_board_index = turn == 0 ? 6 : 0;
-    int8_t enemy_pawn_board_index = turn == 0 ? 0 : 6;
     for (int8_t pawn_pos = 0; pawn_pos < 64; pawn_pos++)
     {
         if ((boards[pawn_board_index] & (1ULL << pawn_pos)) != 0)
         {
-            int8_t move_offset = turn == 0 ? 8 : -8;
+            int8_t move_offset = turn == 0 ? -8 : 8;
             bool step1 = true;
             bool step2 = true;
             bool kill_left = false;
             bool kill_right = false;
-            bool en_passant_left = false;
-            bool en_passant_right = false;
-            bool pawn_promotion = false;
             for (int board_idx = 0; board_idx < 12; board_idx++)
             {
                 if ((boards[board_idx] & (1ULL << (pawn_pos + move_offset))) != 0)
@@ -768,12 +764,12 @@ std::vector<uint16_t> Bitboards::get_legal_pawn_moves()
                     step1 = false;
                     break;
                 }
-                if ((boards[board_idx] & (1ULL << (pawn_pos + (2 * move_offset)))) != 0 && (turn == 0 && pawn_pos >= 48 && pawn_pos <= 55) || (turn == 1 && pawn_pos >= 8 && pawn_pos <= 15))
+                if (((boards[board_idx] & (1ULL << (pawn_pos + (2 * move_offset)))) != 0))
                 {
                     step2 = false;
                     break;
                 }
-                if ((turn == 0 && board_idx > 5) || (turn == 1 && board_idx <= 5))
+                if ((turn == 1 && board_idx > 5) || (turn == 0 && board_idx <= 5))
                 {
                     if (boards[board_idx] & (1ULL << (pawn_pos + move_offset - 1)))
                     {
@@ -785,13 +781,23 @@ std::vector<uint16_t> Bitboards::get_legal_pawn_moves()
                     }
                 }
             }
+            if (!(turn == 0 && pawn_pos >= 48 && pawn_pos <= 55) && !(turn == 1 && pawn_pos >= 8 && pawn_pos <= 15))
+            {
+                step2 = false;
+            }
             if (en_passant == pawn_pos + move_offset - 1)
             {
-                en_passant_left = true;
+                uint16_t move = 0;
+                move |= (pawn_pos & 0x3F);
+                move |= ((pawn_pos + move_offset - 1) & 0x3F) << 6;
+                legal_moves.push_back(move);
             }
             if (en_passant == pawn_pos + move_offset + 1)
             {
-                en_passant_right = true;
+                uint16_t move = 0;
+                move |= (pawn_pos & 0x3F);
+                move |= ((pawn_pos + move_offset + 1) & 0x3F) << 6;
+                legal_moves.push_back(move);
             }
 
             if (step1)
@@ -799,7 +805,22 @@ std::vector<uint16_t> Bitboards::get_legal_pawn_moves()
                 uint16_t move = 0;
                 move |= (pawn_pos & 0x3F);
                 move |= ((pawn_pos + move_offset) & 0x3F) << 6;
-                legal_moves.push_back(move);
+                if ((turn == 0 && pawn_pos >= 8 && pawn_pos <= 15) || (turn == 1 && pawn_pos >= 48 && pawn_pos <= 55))
+                {
+                    // Pawn promotion
+                    for (int promotion_piece = 0; promotion_piece < 4; promotion_piece++)
+                    {
+                        uint16_t promotion_move = move;
+                        promotion_move |= 0x1000;
+                        promotion_move |= (promotion_piece << 13);
+                        legal_moves.push_back(promotion_move);
+                    }
+                }
+                else
+                {
+
+                    legal_moves.push_back(move);
+                }
             }
             if (step2)
             {
@@ -813,40 +834,123 @@ std::vector<uint16_t> Bitboards::get_legal_pawn_moves()
                 uint16_t move = 0;
                 move |= (pawn_pos & 0x3F);
                 move |= ((pawn_pos + move_offset - 1) & 0x3F) << 6;
-                legal_moves.push_back(move);
+
+                if ((turn == 0 && pawn_pos >= 8 && pawn_pos <= 15) || (turn == 1 && pawn_pos >= 48 && pawn_pos <= 55))
+                {
+                    // Pawn promotion
+                    for (int promotion_piece = 0; promotion_piece < 4; promotion_piece++)
+                    {
+                        uint16_t promotion_move = move;
+                        promotion_move |= 0x1000;
+                        promotion_move |= (promotion_piece << 13);
+                        legal_moves.push_back(promotion_move);
+                    }
+                }
+                else
+                {
+                    legal_moves.push_back(move);
+                }
             }
             if (kill_right)
             {
                 uint16_t move = 0;
                 move |= (pawn_pos & 0x3F);
                 move |= ((pawn_pos + move_offset + 1) & 0x3F) << 6;
-                legal_moves.push_back(move);
+
+                if ((turn == 0 && pawn_pos >= 8 && pawn_pos <= 15) || (turn == 1 && pawn_pos >= 48 && pawn_pos <= 55))
+                {
+                    // Pawn promotion
+                    for (int promotion_piece = 0; promotion_piece < 4; promotion_piece++)
+                    {
+                        uint16_t promotion_move = move;
+                        promotion_move |= 0x1000;
+                        promotion_move |= (promotion_piece << 13);
+                        legal_moves.push_back(promotion_move);
+                    }
+                }
+                else
+                {
+                    legal_moves.push_back(move);
+                }
             }
         }
     }
+    return legal_moves;
+}
+
+std::string decodeMove(uint16_t move)
+{
+    // Extrahieren der Start- und Zielpositionen
+    int start = move & 0x3F;                // Die ersten 6 Bits
+    int end = (move >> 6) & 0x3F;           // Die nächsten 6 Bits
+    bool isPromotion = (move >> 12) & 0x1;  // Das 13. Bit für Pawn Promotion
+    int promotionType = (move >> 13) & 0x3; // Die Bits 14 und 15 für den Typ der Promotion
+
+    // Umwandeln der Positionen in Schachnotation (h1, a8, etc.)
+    std::string startFile = std::string(1, 'h' - (start % 8));
+    std::string startRank = std::string(1, '1' + (start / 8));
+
+    std::string endFile = std::string(1, 'h' - (end % 8));
+    std::string endRank = std::string(1, '1' + (end / 8));
+    std::string promotionPiece;
+    if (isPromotion)
+    {
+        switch (promotionType)
+        {
+        case 0:
+            promotionPiece = "N";
+            break; // Springer
+        case 1:
+            promotionPiece = "B";
+            break; // Läufer
+        case 2:
+            promotionPiece = "R";
+            break; // Turm
+        default:
+            promotionPiece = "Q";
+            break; // Dame
+        }
+    }
+
+    // Zusammensetzen des Zuges
+    std::string decodedMove = startFile + startRank + endFile + endRank;
+
+    // Hinzufügen der Bauernumwandlung, falls vorhanden
+    if (isPromotion)
+    {
+        decodedMove += "=" + promotionPiece;
+    }
+
+    return decodedMove;
 }
 
 std::vector<uint16_t> Bitboards::get_legal_moves()
 {
 
-    /*auto start = std::chrono::high_resolution_clock::now();
-    for (int i = 0; i < 1000000; i++)
-    {
-        std::vector<uint16_t> vec = get_legal_rook_moves();
+    turn = !turn;
+    std::vector<uint16_t> enemy_moves_no_king = get_legal_rook_moves() + get_legal_bishop_moves() + get_legal_queen_moves() + get_legal_knight_moves() + get_legal_pawn_moves();
+    std::vector<uint16_t> enemy_moves_no_king;
 
-        get_legal_bishop_moves();
-        get_legal_queen_moves();
-    }
-    auto end = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+    auto rook_moves = get_legal_rook_moves();
+    enemy_moves_no_king.insert(enemy_moves_no_king.end(), rook_moves.begin(), rook_moves.end());
 
-    std::cout << "Execution time: " << duration.count() << " microseconds" << std::endl;*/
+    auto bishop_moves = get_legal_bishop_moves();
+    enemy_moves_no_king.insert(enemy_moves_no_king.end(), bishop_moves.begin(), bishop_moves.end());
 
-    std::vector<uint16_t> vec = get_legal_knight_moves();
+    auto queen_moves = get_legal_queen_moves();
+    enemy_moves_no_king.insert(enemy_moves_no_king.end(), queen_moves.begin(), queen_moves.end());
+
+    auto knight_moves = get_legal_knight_moves();
+    enemy_moves_no_king.insert(enemy_moves_no_king.end(), knight_moves.begin(), knight_moves.end());
+
+    auto pawn_moves = get_legal_pawn_moves();
+    enemy_moves_no_king.insert(enemy_moves_no_king.end(), pawn_moves.begin(), pawn_moves.end());
+    std::vector<uint16_t> vec = get_legal_pawn_moves();
     std::cout << vec.size() << std::endl;
     for (int i = 0; i < vec.size(); i++)
     {
-        std::cout << std::bitset<16>(vec[i]) << std::endl;
+        std::bitset<16> bits(vec[i]);
+        std::cout << decodeMove(vec[i]) << std::endl;
     }
     return std::vector<uint16_t>();
 }

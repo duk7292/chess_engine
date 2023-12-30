@@ -8,3 +8,7 @@ frage1
 
 rnbqkbnr/1ppppppN/6p1/8/8/8/PPPPPPPP/R1BQKB1R|kq|KQ|--|1
 
+15.14.13.12
+11.10.9.8
+7.6.5.4
+3.2.1.0
