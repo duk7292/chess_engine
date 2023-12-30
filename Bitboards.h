@@ -19,7 +19,7 @@ private:
     std::vector<uint16_t> get_legal_queen_moves();
     std::vector<uint16_t> get_legal_knight_moves();
     std::vector<uint16_t> get_legal_pawn_moves();
-
+    std::vector<uint16_t> get_legal_king_moves_absolute();
 public:
     Bitboards();
     ~Bitboards();

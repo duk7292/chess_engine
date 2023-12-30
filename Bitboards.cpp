@@ -878,6 +878,61 @@ std::vector<uint16_t> Bitboards::get_legal_pawn_moves()
     return legal_moves;
 }
 
+std::vector<uint16_t> Bitboards::get_legal_king_moves_absolute()
+{
+    std::vector<uint16_t> legal_moves;
+
+    int8_t king_board_index = turn == 0 ? 11 : 5;
+
+    for (int8_t king_pos = 0; king_pos < 64; king_pos++)
+    {
+        if ((boards[king_board_index] & (1ULL << king_pos)) != 0)
+        {
+            int8_t move_offsets[8] = {-9, -8, -7, -1, 1, 7, 8, 9};
+            int8_t rows_up[8] = {-1, -1, -1, 0, 0, 1, 1, 1};
+            for (int move_idx = 0; move_idx < 8; move_idx++)
+            {
+                if (king_pos + move_offsets[move_idx] < 0 || king_pos + move_offsets[move_idx] >= 64)
+                {
+                    continue;
+                }
+                
+                if(((int)(((king_pos) + move_offsets[move_idx]) / 8)) - ((int)((king_pos) / 8)) != rows_up[move_idx])
+                {
+                    continue;
+                }
+                bool valid_move = true;
+                for(int8_t board_idx = 0; board_idx < 12; board_idx++)
+                {
+                    if((boards[board_idx] & (1ULL << (king_pos + move_offsets[move_idx]))) != 0)
+                    {
+                        if((turn == 0 && board_idx <= 5) || (turn == 1 && board_idx > 5))
+                        {
+                            continue;
+                        }
+                        else
+                        {
+                            valid_move = false;
+                            break;
+                        }
+                    }
+                }
+                if(valid_move)
+                {
+                    uint16_t move = 0;
+                    move |= (king_pos & 0x3F);
+                    move |= ((king_pos + move_offsets[move_idx]) & 0x3F) << 6;
+                    legal_moves.push_back(move);
+                }
+            }
+            break;
+        }
+                
+    
+    }
+    return legal_moves;
+}
+
 std::string decodeMove(uint16_t move)
 {
     // Extrahieren der Start- und Zielpositionen
@@ -928,29 +983,29 @@ std::vector<uint16_t> Bitboards::get_legal_moves()
 {
 
     turn = !turn;
-    std::vector<uint16_t> enemy_moves_no_king = get_legal_rook_moves() + get_legal_bishop_moves() + get_legal_queen_moves() + get_legal_knight_moves() + get_legal_pawn_moves();
     std::vector<uint16_t> enemy_moves_no_king;
 
-    auto rook_moves = get_legal_rook_moves();
+    std::vector<uint16_t> rook_moves = get_legal_rook_moves();
     enemy_moves_no_king.insert(enemy_moves_no_king.end(), rook_moves.begin(), rook_moves.end());
 
-    auto bishop_moves = get_legal_bishop_moves();
+    std::vector<uint16_t> bishop_moves = get_legal_bishop_moves();
     enemy_moves_no_king.insert(enemy_moves_no_king.end(), bishop_moves.begin(), bishop_moves.end());
 
-    auto queen_moves = get_legal_queen_moves();
+    std::vector<uint16_t> queen_moves = get_legal_queen_moves();
     enemy_moves_no_king.insert(enemy_moves_no_king.end(), queen_moves.begin(), queen_moves.end());
 
-    auto knight_moves = get_legal_knight_moves();
+    std::vector<uint16_t> knight_moves = get_legal_knight_moves();
     enemy_moves_no_king.insert(enemy_moves_no_king.end(), knight_moves.begin(), knight_moves.end());
 
-    auto pawn_moves = get_legal_pawn_moves();
+    std::vector<uint16_t> pawn_moves = get_legal_pawn_moves();
     enemy_moves_no_king.insert(enemy_moves_no_king.end(), pawn_moves.begin(), pawn_moves.end());
-    std::vector<uint16_t> vec = get_legal_pawn_moves();
-    std::cout << vec.size() << std::endl;
-    for (int i = 0; i < vec.size(); i++)
+
+    std::vector<uint16_t> vec = get_legal_king_moves_absolute();
+    std::cout << enemy_moves_no_king.size() << std::endl;
+    for (int i = 0; i < enemy_moves_no_king.size(); i++)
     {
-        std::bitset<16> bits(vec[i]);
-        std::cout << decodeMove(vec[i]) << std::endl;
+        std::bitset<16> bits(enemy_moves_no_king[i]);
+        std::cout << decodeMove(enemy_moves_no_king[i]) << std::endl;
     }
     return std::vector<uint16_t>();
 }
