@@ -7,19 +7,30 @@
 #include <vector>
 #include <bitset>
 #include <chrono>
+#include <algorithm>
 class Bitboards
 {
 private:
     uint64_t boards[12];
-    int turn = 0;
+    int turn_G = 0;
     uint8_t en_passant = 0;
     bool castling[4] = {true, true, true, true};
-    std::vector<uint16_t> get_legal_rook_moves();
-    std::vector<uint16_t> get_legal_bishop_moves();
-    std::vector<uint16_t> get_legal_queen_moves();
-    std::vector<uint16_t> get_legal_knight_moves();
-    std::vector<uint16_t> get_legal_pawn_moves();
-    std::vector<uint16_t> get_legal_king_moves_absolute();
+
+    // absolute moves
+
+    std::vector<uint16_t> get_legal_rook_moves_absolute(int turn);
+    std::vector<uint16_t> get_legal_bishop_moves_absolute(int turn);
+    std::vector<uint16_t> get_legal_queen_moves_absolute(int turn);
+    std::vector<uint16_t> get_legal_knight_moves_absolute(int turn);
+    std::vector<uint16_t> get_legal_pawn_moves_absolute(int turn);
+    std::vector<uint16_t> get_legal_king_moves_absolute(int turn);
+
+    bool is_check(std::vector<uint16_t> enemy_moves, int turn);
+
+    std::vector<std::vector<uint8_t>> get_king_prot_lines(int turn);
+
+    std::vector<uint16_t> erase_ilegal_moves(std::vector<uint16_t> moves, std::vector<std::vector<uint8_t>> king_prot_lines);
+
 public:
     Bitboards();
     ~Bitboards();

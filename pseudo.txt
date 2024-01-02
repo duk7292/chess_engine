@@ -13,8 +13,8 @@ else{
     vec king_prot_lines = cal_king_prot_lines()
     
 
-    m = get_moves
-    (king_prot_lines)
+    |m| = get_moves
+    m = eliminate_moves_by_prot_lines(|m|,king_prot_lines)
 
 
     km = get_king_moves(|Ḿ|)

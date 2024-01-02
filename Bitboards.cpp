@@ -73,7 +73,7 @@ void Bitboards::write_boards_from_FEN(std::string FEN)
             current_postion--;
         }
     }
-    turn = std::stoi(std::string(1, FEN[FEN.length() - 1]));
+    turn_G = std::stoi(std::string(1, FEN[FEN.length() - 1]));
     if (FEN[FEN.length() - 6] == '-')
     {
         castling[3] = false;
@@ -100,7 +100,7 @@ void Bitboards::write_boards_from_FEN(std::string FEN)
 void Bitboards::copy_state(Bitboards *bitboards)
 {
     memcpy(boards, bitboards->get_boards(), sizeof(uint64_t) * 12);
-    turn = bitboards->get_turn();
+    turn_G = bitboards->get_turn();
 }
 
 uint64_t *Bitboards::get_boards()
@@ -110,10 +110,10 @@ uint64_t *Bitboards::get_boards()
 
 int Bitboards::get_turn()
 {
-    return turn;
+    return turn_G;
 }
 
-std::vector<uint16_t> Bitboards::get_legal_rook_moves()
+std::vector<uint16_t> Bitboards::get_legal_rook_moves_absolute(int turn)
 
 {
     std::vector<uint16_t> legal_moves;
@@ -266,7 +266,7 @@ std::vector<uint16_t> Bitboards::get_legal_rook_moves()
     return legal_moves;
 }
 
-std::vector<uint16_t> Bitboards::get_legal_bishop_moves()
+std::vector<uint16_t> Bitboards::get_legal_bishop_moves_absolute(int turn)
 {
     std::vector<uint16_t> legal_moves;
     legal_moves.reserve(32);
@@ -419,7 +419,7 @@ std::vector<uint16_t> Bitboards::get_legal_bishop_moves()
     return legal_moves;
 }
 
-std::vector<uint16_t> Bitboards::get_legal_queen_moves()
+std::vector<uint16_t> Bitboards::get_legal_queen_moves_absolute(int turn)
 {
     std::vector<uint16_t> legal_moves;
     legal_moves.reserve(64);
@@ -686,7 +686,7 @@ std::vector<uint16_t> Bitboards::get_legal_queen_moves()
     return legal_moves;
 }
 
-std::vector<uint16_t> Bitboards::get_legal_knight_moves()
+std::vector<uint16_t> Bitboards::get_legal_knight_moves_absolute(int turn)
 {
     std::vector<uint16_t> legal_moves;
     legal_moves.reserve(8);
@@ -742,7 +742,7 @@ std::vector<uint16_t> Bitboards::get_legal_knight_moves()
     return legal_moves;
 }
 
-std::vector<uint16_t> Bitboards::get_legal_pawn_moves()
+std::vector<uint16_t> Bitboards::get_legal_pawn_moves_absolute(int turn)
 {
     std::vector<uint16_t> legal_moves;
     legal_moves.reserve(16);
@@ -805,6 +805,7 @@ std::vector<uint16_t> Bitboards::get_legal_pawn_moves()
                 uint16_t move = 0;
                 move |= (pawn_pos & 0x3F);
                 move |= ((pawn_pos + move_offset) & 0x3F) << 6;
+                move |= 0x8000;
                 if ((turn == 0 && pawn_pos >= 8 && pawn_pos <= 15) || (turn == 1 && pawn_pos >= 48 && pawn_pos <= 55))
                 {
                     // Pawn promotion
@@ -818,7 +819,7 @@ std::vector<uint16_t> Bitboards::get_legal_pawn_moves()
                 }
                 else
                 {
-
+                    // Set the 15th bit to 1 for non-capturing moves
                     legal_moves.push_back(move);
                 }
             }
@@ -827,6 +828,7 @@ std::vector<uint16_t> Bitboards::get_legal_pawn_moves()
                 uint16_t move = 0;
                 move |= (pawn_pos & 0x3F);
                 move |= ((pawn_pos + (2 * move_offset)) & 0x3F) << 6;
+                move |= 0x8000; // Set the 15th bit to 1 for non-capturing moves
                 legal_moves.push_back(move);
             }
             if (kill_left)
@@ -878,7 +880,7 @@ std::vector<uint16_t> Bitboards::get_legal_pawn_moves()
     return legal_moves;
 }
 
-std::vector<uint16_t> Bitboards::get_legal_king_moves_absolute()
+std::vector<uint16_t> Bitboards::get_legal_king_moves_absolute(int turn)
 {
     std::vector<uint16_t> legal_moves;
 
@@ -896,17 +898,17 @@ std::vector<uint16_t> Bitboards::get_legal_king_moves_absolute()
                 {
                     continue;
                 }
-                
-                if(((int)(((king_pos) + move_offsets[move_idx]) / 8)) - ((int)((king_pos) / 8)) != rows_up[move_idx])
+
+                if (((int)(((king_pos) + move_offsets[move_idx]) / 8)) - ((int)((king_pos) / 8)) != rows_up[move_idx])
                 {
                     continue;
                 }
                 bool valid_move = true;
-                for(int8_t board_idx = 0; board_idx < 12; board_idx++)
+                for (int8_t board_idx = 0; board_idx < 12; board_idx++)
                 {
-                    if((boards[board_idx] & (1ULL << (king_pos + move_offsets[move_idx]))) != 0)
+                    if ((boards[board_idx] & (1ULL << (king_pos + move_offsets[move_idx]))) != 0)
                     {
-                        if((turn == 0 && board_idx <= 5) || (turn == 1 && board_idx > 5))
+                        if ((turn == 0 && board_idx <= 5) || (turn == 1 && board_idx > 5))
                         {
                             continue;
                         }
@@ -917,7 +919,7 @@ std::vector<uint16_t> Bitboards::get_legal_king_moves_absolute()
                         }
                     }
                 }
-                if(valid_move)
+                if (valid_move)
                 {
                     uint16_t move = 0;
                     move |= (king_pos & 0x3F);
@@ -927,12 +929,169 @@ std::vector<uint16_t> Bitboards::get_legal_king_moves_absolute()
             }
             break;
         }
-                
-    
     }
     return legal_moves;
 }
 
+bool Bitboards::is_check(std::vector<uint16_t> enemy_moves, int turn)
+{
+    int8_t king_board_index = turn == 0 ? 11 : 5;
+
+    for (int8_t king_pos = 0; king_pos < 64; king_pos++)
+    {
+        if ((boards[king_board_index] & (1ULL << king_pos)) != 0)
+        {
+            for (uint16_t move_idx = 0; move_idx < enemy_moves.size(); move_idx++)
+            {
+
+                uint16_t mask = 0x7F << 6;
+                uint16_t isolated = enemy_moves[move_idx] & mask;
+                isolated >>= 6;
+                if ((isolated) == king_pos && enemy_moves[move_idx] <= 32767)
+                {
+                    return true;
+                }
+            }
+            break;
+        }
+    }
+    return false;
+}
+
+std::vector<std::vector<uint8_t>> Bitboards::get_king_prot_lines(int turn)
+{
+    std::vector<std::vector<uint8_t>> prot_lines;
+
+    int8_t move_offsets[8] = {8, 7, 1, -7, -8, -9, -1, 9};
+    int8_t rows_up[8] = {1, 1, 0, -1, -1, -1, 0, 1};
+
+    std::vector<int8_t> important_enemy_boards = turn == 0 ? std::vector<int8_t>{2, 3, 4} : std::vector<int8_t>{8, 9, 10};
+    int8_t king_board_index = turn == 0 ? 11 : 5;
+
+    for (int8_t king_pos = 0; king_pos < 64; king_pos++)
+    {
+        if ((boards[king_board_index] & (1ULL << king_pos)) != 0)
+        {
+            for (int8_t prot_line_idx = 0; prot_line_idx < 8; prot_line_idx++)
+            {
+                std::vector<uint8_t> prot_line;
+                int8_t friendly_figures_on_line = 0;
+                int8_t friendly_figures_on_line_pos;
+                bool important_enemy_figure_on_line = false;
+                bool unimportant_enemy_figure_on_line = false;
+                int8_t important_enemy_figure_on_line_pos;
+                for (int move_idx = 1; move_idx <= 8; move_idx++)
+                {
+                    if (king_pos + move_offsets[prot_line_idx] * move_idx < 0 || king_pos + move_offsets[prot_line_idx] * move_idx >= 64)
+                    {
+                        break;
+                    }
+
+                    if (((int)(((king_pos) + move_offsets[prot_line_idx] * move_idx) / 8)) - ((int)(((king_pos) + move_offsets[prot_line_idx] * (move_idx - 1)) / 8)) != rows_up[prot_line_idx])
+                    {
+                        break;
+                    }
+                    for (int8_t board_idx = 0; board_idx < 12; board_idx++)
+                    {
+                        if ((boards[board_idx] & (1ULL << ((king_pos) + move_offsets[prot_line_idx] * move_idx))) != 0)
+                        {
+                            if ((turn == 1 && board_idx <= 5) || (turn == 0 && board_idx > 5))
+                            {
+
+                                friendly_figures_on_line++;
+                                friendly_figures_on_line_pos = (king_pos) + move_offsets[prot_line_idx] * move_idx;
+                            }
+                            else if ((turn == 0 && board_idx <= 5) || (turn == 1 && board_idx > 5))
+                            {
+                                if (!(std::find(important_enemy_boards.begin(), important_enemy_boards.end(), board_idx) != important_enemy_boards.end()))
+                                {
+                                    unimportant_enemy_figure_on_line = true;
+                                }
+                            }
+                            break;
+                        }
+                    }
+                    if (friendly_figures_on_line > 1)
+                    {
+
+                        break;
+                    }
+                    if ((prot_line_idx % 2 == 0 && (boards[important_enemy_boards[1]] & (1ULL << ((king_pos) + move_offsets[prot_line_idx] * move_idx))) != 0) ||
+                        (prot_line_idx % 2 == 1 && (boards[important_enemy_boards[0]] & (1ULL << ((king_pos) + move_offsets[prot_line_idx] * move_idx))) != 0) ||
+                        ((boards[important_enemy_boards[2]] & (1ULL << ((king_pos) + move_offsets[prot_line_idx] * move_idx))) != 0))
+                    {
+
+                        important_enemy_figure_on_line = true;
+                        important_enemy_figure_on_line_pos = (king_pos) + move_offsets[prot_line_idx] * move_idx;
+                        break;
+                    }
+                }
+                if (friendly_figures_on_line > 1 || unimportant_enemy_figure_on_line)
+                {
+                    continue;
+                }
+                else if (important_enemy_figure_on_line)
+                {
+                    prot_line.push_back(friendly_figures_on_line_pos);
+                    for (int current_postion = king_pos; current_postion != important_enemy_figure_on_line_pos; current_postion += move_offsets[prot_line_idx])
+                    {
+                        prot_line.push_back(current_postion + move_offsets[prot_line_idx]);
+                    }
+
+                    prot_lines.push_back(prot_line);
+                }
+            }
+        }
+    }
+    return prot_lines;
+}
+std::string indexToPosition(int index)
+{
+    if (index < 0 || index > 63)
+    {
+        return "Ungültiger Index";
+    }
+
+    char file = 'h' - (index % 8); // Spalte: h-a
+    char rank = '1' + (index / 8); // Reihe: 1-8
+
+    return std::string(1, file) + std::string(1, rank);
+}
+std::vector<uint16_t> Bitboards::erase_ilegal_moves(std::vector<uint16_t> moves, std::vector<std::vector<uint8_t>> king_prot_lines)
+{
+    for (int prot_line = 0; prot_line < king_prot_lines.size(); prot_line++)
+    {
+        for (int move_idx = 0; move_idx < moves.size(); move_idx++)
+        {
+            uint16_t mask = 0x3F;
+            uint16_t start_isolated_16_bit = moves[move_idx] & mask;
+            uint8_t start_isolated = start_isolated_16_bit & 0xFF;
+            if (start_isolated == king_prot_lines[prot_line][0])
+            {
+                mask = 0x7F << 6;
+                uint16_t end_isolated_16_bit = moves[move_idx] & mask;
+                end_isolated_16_bit >>= 6;
+                uint8_t end_isolated = end_isolated_16_bit & 0xFF;
+                bool end_is_on_prot_line = false;
+
+                for (int prot_pos = 1; prot_pos < king_prot_lines[prot_line].size(); prot_pos++)
+                {
+                    if (end_isolated == king_prot_lines[prot_line][prot_pos])
+                    {
+                        end_is_on_prot_line = true;
+                        break;
+                    }
+                }
+                if (!end_is_on_prot_line)
+                {
+                    moves.erase(moves.begin() + move_idx);
+                    move_idx--;
+                }
+            }
+        }
+    }
+    return moves;
+}
 std::string decodeMove(uint16_t move)
 {
     // Extrahieren der Start- und Zielpositionen
@@ -981,31 +1140,65 @@ std::string decodeMove(uint16_t move)
 
 std::vector<uint16_t> Bitboards::get_legal_moves()
 {
+    std::vector<uint16_t> legal_moves;
 
-    turn = !turn;
-    std::vector<uint16_t> enemy_moves_no_king;
+    // enemy moves
+    std::vector<uint16_t> enemy_moves = get_legal_king_moves_absolute(!turn_G);
 
-    std::vector<uint16_t> rook_moves = get_legal_rook_moves();
-    enemy_moves_no_king.insert(enemy_moves_no_king.end(), rook_moves.begin(), rook_moves.end());
+    std::vector<uint16_t> enemy_rook_moves = get_legal_rook_moves_absolute(!turn_G);
+    enemy_moves.insert(enemy_moves.end(), enemy_rook_moves.begin(), enemy_rook_moves.end());
 
-    std::vector<uint16_t> bishop_moves = get_legal_bishop_moves();
-    enemy_moves_no_king.insert(enemy_moves_no_king.end(), bishop_moves.begin(), bishop_moves.end());
+    std::vector<uint16_t> enemy_bishop_moves = get_legal_bishop_moves_absolute(!turn_G);
+    enemy_moves.insert(enemy_moves.end(), enemy_bishop_moves.begin(), enemy_bishop_moves.end());
 
-    std::vector<uint16_t> queen_moves = get_legal_queen_moves();
-    enemy_moves_no_king.insert(enemy_moves_no_king.end(), queen_moves.begin(), queen_moves.end());
+    std::vector<uint16_t> enemy_queen_moves = get_legal_queen_moves_absolute(!turn_G);
+    enemy_moves.insert(enemy_moves.end(), enemy_queen_moves.begin(), enemy_queen_moves.end());
 
-    std::vector<uint16_t> knight_moves = get_legal_knight_moves();
-    enemy_moves_no_king.insert(enemy_moves_no_king.end(), knight_moves.begin(), knight_moves.end());
+    std::vector<uint16_t> enemy_knight_moves = get_legal_knight_moves_absolute(!turn_G);
+    enemy_moves.insert(enemy_moves.end(), enemy_knight_moves.begin(), enemy_knight_moves.end());
 
-    std::vector<uint16_t> pawn_moves = get_legal_pawn_moves();
-    enemy_moves_no_king.insert(enemy_moves_no_king.end(), pawn_moves.begin(), pawn_moves.end());
+    std::vector<uint16_t> enemy_pawn_moves = get_legal_pawn_moves_absolute(!turn_G);
+    enemy_moves.insert(enemy_moves.end(), enemy_pawn_moves.begin(), enemy_pawn_moves.end());
 
-    std::vector<uint16_t> vec = get_legal_king_moves_absolute();
-    std::cout << enemy_moves_no_king.size() << std::endl;
-    for (int i = 0; i < enemy_moves_no_king.size(); i++)
+    // absolute moves
+    std::vector<uint16_t> absolute_moves;
+
+    std::vector<uint16_t> rook_moves = get_legal_rook_moves_absolute(turn_G);
+    absolute_moves.insert(absolute_moves.end(), rook_moves.begin(), rook_moves.end());
+
+    std::vector<uint16_t> bishop_moves = get_legal_bishop_moves_absolute(turn_G);
+    absolute_moves.insert(absolute_moves.end(), bishop_moves.begin(), bishop_moves.end());
+
+    std::vector<uint16_t> queen_moves = get_legal_queen_moves_absolute(turn_G);
+    absolute_moves.insert(absolute_moves.end(), queen_moves.begin(), queen_moves.end());
+
+    std::vector<uint16_t> knight_moves = get_legal_knight_moves_absolute(turn_G);
+    absolute_moves.insert(absolute_moves.end(), knight_moves.begin(), knight_moves.end());
+
+    std::vector<uint16_t> pawn_moves = get_legal_pawn_moves_absolute(turn_G);
+    absolute_moves.insert(absolute_moves.end(), pawn_moves.begin(), pawn_moves.end());
+
+    // is check
+    bool check = is_check(enemy_moves, turn_G);
+
+    if (check)
     {
-        std::bitset<16> bits(enemy_moves_no_king[i]);
-        std::cout << decodeMove(enemy_moves_no_king[i]) << std::endl;
+        std::cout << "check" << std::endl;
     }
-    return std::vector<uint16_t>();
+    else
+    {
+        std::vector<std::vector<uint8_t>> king_prot_lines = get_king_prot_lines(turn_G);
+
+        legal_moves = erase_ilegal_moves(absolute_moves, king_prot_lines);
+
+        std::vector<uint16_t> legal_king_moves = get_legal_pawn_moves_absolute(turn_G);
+
+        legal_moves.insert(legal_moves.end(), legal_king_moves.begin(), legal_king_moves.end());
+        for (int i = 0; i < legal_moves.size(); i++)
+        {
+            std::cout << decodeMove(legal_moves[i]) << std::endl;
+        }
+    }
+
+    return legal_moves;
 }

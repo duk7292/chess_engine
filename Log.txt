@@ -9,4 +9,6 @@
     ich habe die legal pawn moves angefangen dafür habe ich meine custom FEN strings erweitert
 26.12.2023 
     ich habe die legal pawn moves beendet
+01.31.2024
+    um die legalen king moves zu brechnen muss ich erst alle moves des gegners berechnen außerdem muss ich die moves rausfiltern welche den könig in check setzten.
 

@@ -12,3 +12,12 @@ rnbqkbnr/1ppppppN/6p1/8/8/8/PPPPPPPP/R1BQKB1R|kq|KQ|--|1
 11.10.9.8
 7.6.5.4
 3.2.1.0
+
+
+
+auto start = std::chrono::high_resolution_clock::now();
+//code here
+auto end = std::chrono::high_resolution_clock::now();
+auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+
+std::cout << "Execution time: " << duration.count() << " milliseconds" << std::endl;
