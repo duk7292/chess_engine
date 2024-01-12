@@ -31,6 +31,12 @@ private:
 
     std::vector<uint16_t> erase_ilegal_moves(std::vector<uint16_t> moves, std::vector<std::vector<uint8_t>> king_prot_lines);
 
+    std::vector<uint16_t> erase_ilegal_moves_when_check(std::vector<uint16_t> moves, int turn, std::vector<uint16_t> enemy_moves, std::vector<std::vector<uint8_t>> king_prot_lines);
+
+    std::vector<uint16_t> get_legal_king_moves(int turn, std::vector<uint16_t> enemy_moves, std::vector<std::vector<uint8_t>> prot_lines);
+
+    std::vector<uint16_t> get_legal_casteling_moves(int turn, std::vector<uint16_t> enemy_moves);
+
 public:
     Bitboards();
     ~Bitboards();
