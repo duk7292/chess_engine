@@ -12,5 +12,9 @@
 01.31.2024
     um die legalen king moves zu brechnen muss ich erst alle moves des gegners berechnen außerdem muss ich die moves rausfiltern welche den könig in check setzten.
 5.01.2024
-    ich habe angefangen casteling zu brechnen
-
+    ich habe die casteling_moves Berechnung gemacht
+13.01.2024
+    ich habe eine FEN String datenbank genommen und 56000 Fen strings berechen lassen. Um zu testen ob alle richtig sind habe ich auch eine python-chess libary die gleichen FEN strings gegeben
+    der erste fehler an meinem code der mir auffiel war das der könig gegner schlagen könnte welche gedeckt werden.
+22.01.2024
+    ich habe die restlichen fehler im code gelöst und ein test mit 28 Miliionen positionen gemacht mit 0 fehlern.

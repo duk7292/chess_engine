@@ -8,8 +8,8 @@ def copy_every_nth_line(input_file_path, output_file_path, n):
                 file.write(line)
 
 # Pfad der Eingabe- und Ausgabedatei
-input_file_path = 'unique00.fen'
-output_file_path = 'shot_fen.fen'
-n = 1000  # Beispiel: Kopiere jede fünfte Zeile
+input_file_path = 'FEN-tests/Standard/FEN-in/unique00.fen'
+output_file_path = 'short_fen_25M.txt'
+n = 2  # Beispiel: Kopiere jede fünfte Zeile
 
 copy_every_nth_line(input_file_path, output_file_path, n)

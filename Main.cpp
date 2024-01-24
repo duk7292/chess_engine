@@ -1,9 +1,13 @@
-#include <iostream>
-#include "Main.h"
-#include <fstream>
-#include <string>
-#include "Bitboards.h"
 
+#include <iostream>
+#include <fstream>
+#include <vector>
+#include <string>
+#include <thread>
+#include <chrono>
+#include <future>
+#include "Main.h"
+#include "Bitboards.h"
 void printArray(const uint64_t *arr, size_t size)
 {
     for (size_t i = 0; i < size; i++)
@@ -57,10 +61,11 @@ std::string decodeMove(uint16_t move)
 
     return decodedMove;
 }
+
 // int main()
 // {
 //     Bitboards *bitboards = new Bitboards();
-//     bitboards->write_boards_from_FEN("1b2r1k1/1p1bRpp1/p4n2/3p3p/2qN1N1P/P1P2PP1/1P1Q1B2/R5K1|----|--|0");
+//     bitboards->write_boards_from_FEN("2q5/3P4/8/8/8/7K/8/8|----|--|1");
 //     std::vector<uint16_t> legalMoves = bitboards->get_legal_moves();
 //     // printArray(bitboards->get_boards(), 12);
 //     for (const auto &move : legalMoves)
@@ -72,23 +77,19 @@ std::string decodeMove(uint16_t move)
 
 int main()
 {
-    std::ifstream infile("custom_fen_file.txt");
-    std::ofstream outfile("custom_moves_file.txt");
+    std::ifstream infile("FEN-tests/Custom/FEN-in/custom_fen_file_25M.txt");
+    std::ofstream outfile("FEN-tests/Custom/Moves-out/custom_moves_file_25M.txt");
     std::string line;
 
-    int a = 1;
+    auto start = std::chrono::high_resolution_clock::now(); // Start measuring time
 
     while (std::getline(infile, line))
     {
-
         Bitboards *bitboards = new Bitboards();
         bitboards->write_boards_from_FEN(line);
 
-        // Hier rufen Sie die Funktion auf, die die legalen Züge zurückgibt.
-        // Angenommen, get_legal_moves() gibt einen std::vector<uint16_t> zurück
-
         std::vector<uint16_t> legalMoves = bitboards->get_legal_moves();
-        outfile << line << " ";
+
         for (const auto &move : legalMoves)
         {
             outfile << decodeMove(move) << " ";
@@ -97,5 +98,63 @@ int main()
         delete bitboards;
     }
 
+    auto end = std::chrono::high_resolution_clock::now();                               // Stop measuring time
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start); // Calculate duration in milliseconds
+
+    std::cout << "Time taken: " << duration.count() << " milliseconds" << std::endl;
+
     return 0;
 }
+
+// void process_fen_strings(const std::vector<std::string> &fenStrings, size_t start, size_t end)
+// {
+//     Bitboards *bitboards = new Bitboards(); // Erstellen des Bitboards-Objekts einmal pro Thread
+
+//     for (size_t i = start; i < end; ++i)
+//     {
+//         bitboards->write_boards_from_FEN(fenStrings[i]);
+//         std::vector<uint16_t> legalMoves = bitboards->get_legal_moves();
+//         // Hier könnten Sie die legalMoves verwenden, falls nötig
+//     }
+
+//     delete bitboards; // Löschen des Bitboards-Objekts am Ende der Thread-Ausführung
+// }
+
+// int main()
+// {
+//     std::ifstream infile("FEN-tests/Custom/FEN-in/custom_fen_file-500k.txt");
+//     std::string line;
+//     std::vector<std::string> fenStrings;
+
+//     while (std::getline(infile, line))
+//     {
+//         fenStrings.push_back(line);
+//     }
+//     std::cout << "FEN-Strings loaded" << std::endl;
+
+//     auto start = std::chrono::high_resolution_clock::now();
+
+//     const size_t num_threads = std::thread::hardware_concurrency();
+//     std::vector<std::thread> threads(num_threads);
+
+//     size_t chunk_size = fenStrings.size() / num_threads;
+//     for (size_t i = 0; i < num_threads; ++i)
+//     {
+//         size_t start_index = i * chunk_size;
+//         size_t end_index = (i + 1 == num_threads) ? fenStrings.size() : start_index + chunk_size;
+
+//         threads[i] = std::thread(process_fen_strings, std::ref(fenStrings), start_index, end_index);
+//     }
+
+//     for (auto &thread : threads)
+//     {
+//         thread.join();
+//     }
+
+//     auto end = std::chrono::high_resolution_clock::now();
+//     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+
+//     std::cout << "Time taken: " << duration.count() << " milliseconds" << std::endl;
+
+//     return 0;
+// }
