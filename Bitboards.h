@@ -8,6 +8,7 @@
 #include <bitset>
 #include <chrono>
 #include <algorithm>
+#include <fstream>
 class Bitboards
 {
 private:
@@ -50,6 +51,91 @@ public:
     uint64_t *get_boards();
     int get_turn();
     std::vector<uint16_t> get_legal_moves();
+
+    uint8_t get_en_passant();
+
+    std::string generateFEN() const
+    {
+        std::string FEN;
+        int emptyCount = 0;
+
+        for (int rank = 7; rank >= 0; --rank)
+        {
+            for (int file = 7; file >= 0; --file)
+            {
+                int position = rank * 8 + file;
+                char piece = '.';
+                for (int i = 0; i < 12; ++i)
+                {
+                    if (boards[i] & (1ULL << position))
+                    {
+                        static const char *pieceNotation = "PNBRQKpnbrqk";
+                        piece = pieceNotation[i];
+                        break;
+                    }
+                }
+
+                if (piece == '.')
+                {
+                    ++emptyCount;
+                }
+                else
+                {
+                    if (emptyCount > 0)
+                    {
+                        FEN += std::to_string(emptyCount);
+                        emptyCount = 0;
+                    }
+                    FEN += piece;
+                }
+            }
+            if (emptyCount > 0)
+            {
+                FEN += std::to_string(emptyCount);
+                emptyCount = 0;
+            }
+            if (rank > 0)
+                FEN += '/';
+        }
+
+        FEN += ' ';
+        FEN += (turn_G == 1) ? 'w' : 'b';
+
+        FEN += ' ';
+        if (!castling[0] && !castling[1] && !castling[2] && !castling[3])
+        {
+            FEN += '-';
+        }
+        else
+        {
+            if (castling[0])
+                FEN += 'K';
+            if (castling[1])
+                FEN += 'Q';
+            if (castling[2])
+                FEN += 'k';
+            if (castling[3])
+                FEN += 'q';
+        }
+
+        FEN += ' ';
+        if (en_passant >= 0)
+        {
+            int file = en_passant % 8;
+            int rank = 0 + (en_passant / 8); // Korrektur, um den Index in eine Schachbrett-Reihe umzurechnen
+            FEN += char('h' - file);
+            FEN += std::to_string(rank + 1); // +1, da Schachreihen bei 1 beginnen
+        }
+        else
+        {
+            FEN += '-';
+        }
+
+        // Hier könnten weitere Informationen wie Halbzug- und Zugnummer hinzugefügt werden
+        FEN += " 0 1";
+
+        return FEN;
+    }
 };
 
 #endif

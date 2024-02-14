@@ -38,8 +38,8 @@ def process_fen_file(input_file_path, output_file_path):
             file.write(custom_fen + '\n')
 
 # Pfad der Eingabe- und Ausgabedatei
-input_file_path = 'FEN-tests/Standard/FEN-in/short_fen_25M.txt'
-output_file_path = 'FEN-tests/Custom/FEN-in/custom_fen_file_25M.txt'
+input_file_path = 'FEN-tests/Standard/FEN-in/moves_test_before.txt'
+output_file_path = 'FEN-tests/Custom/FEN-in/moves_test_before.txt'
 
 #process_fen_file(input_file_path, output_file_path)
 process_fen_file(input_file_path, output_file_path)

@@ -124,6 +124,11 @@ void Bitboards::copy_state(Bitboards *bitboards)
 {
     memcpy(boards, bitboards->get_boards(), sizeof(uint64_t) * 12);
     turn_G = bitboards->get_turn();
+    en_passant = bitboards->en_passant;
+    for (int i = 0; i < 4; i++)
+    {
+        castling[i] = bitboards->castling[i];
+    }
 }
 
 uint64_t *Bitboards::get_boards()
@@ -1334,6 +1339,7 @@ std::vector<uint16_t> Bitboards::erase_ilegal_moves(std::vector<uint16_t> moves,
             {
                 direction = dif > 0 ? 1 : -1;
             }
+
             bool piece_in_the_way = false;
             bool at_enpassent_pos = false;
             bool irrelevant_piece_after = false;
@@ -1346,7 +1352,7 @@ std::vector<uint16_t> Bitboards::erase_ilegal_moves(std::vector<uint16_t> moves,
                     if ((boards[board_idx] & (1ULL << current_postion)) != 0)
                     {
 
-                        if (current_postion != king_positions && !at_enpassent_pos && current_postion != en_passant_enemy_pos)
+                        if (current_postion != king_positions && !at_enpassent_pos && current_postion != en_passant_enemy_pos && current_postion != en_passant_killer_pos_vec[en_passant_killer_pos_idx])
                         {
 
                             piece_in_the_way = true;
@@ -1674,43 +1680,192 @@ std::vector<uint16_t> Bitboards::get_legal_moves()
 
     return legal_moves;
 }
-
-void make_move(uint16_t move)
+uint8_t Bitboards::get_en_passant()
 {
+    return en_passant;
+}
+void Bitboards::make_move(uint16_t move)
+{
+
     // Extrahieren der Start- und Zielpositionen
     int start = move & 0x3F;                // Die ersten 6 Bits
     int end = (move >> 6) & 0x3F;           // Die nächsten 6 Bits
     bool isPromotion = (move >> 12) & 0x1;  // Das 13. Bit für Pawn Promotion
     int promotionType = (move >> 13) & 0x3; // Die Bits 14 und 15 für den Typ der Promotion
-
-    // Umwandeln der Positionen in Schachnotation (h1, a8, etc.)
-    std::string startFile = std::string(1, 'h' - (start % 8));
-    std::string startRank = std::string(1, '1' + (start / 8));
-
-    std::string endFile = std::string(1, 'h' - (end % 8));
-    std::string endRank = std::string(1, '1' + (end / 8));
-
-    // Ausgeben des Zuges
-    std::cout << startFile << startRank << endFile << endRank;
-
-    // Hinzufügen der Bauernumwandlung, falls vorhanden
-    if (isPromotion)
+    int moveType = 0;
+    for (int board_idx = 0; int(board_idx) < 12; board_idx++)
     {
-        switch (promotionType)
+        if ((boards[board_idx] & (1ULL << start)) != 0)
         {
-        case 0:
-            std::cout << "=N";
-            break; // Springer
-        case 1:
-            std::cout << "=B";
-            break; // Läufer
-        case 2:
-            std::cout << "=R";
-            break; // Turm
-        default:
-            std::cout << "=Q";
-            break; // Dame
+            moveType = board_idx;
+            break;
         }
     }
-    std::cout << std::endl;
+
+    // en passant
+    // doing en passant
+    if (moveType == (turn_G ? 0 : 6))
+    {
+        if (en_passant)
+        {
+
+            if (turn_G)
+            {
+                if (((start + 9 == en_passant) || (start + 7 == en_passant)) && end == en_passant && en_passant != 0 && (start >= 32 && start <= 39))
+                {
+
+                    boards[6] &= ~(1ULL << (en_passant - 8));
+                    en_passant = 0;
+                }
+            }
+            else
+            {
+                if (((start - 9 == en_passant) || (start - 7 == en_passant)) && end == en_passant && en_passant != 0 && (start >= 24 && start <= 31))
+                {
+
+                    boards[0] &= ~(1ULL << (en_passant + 8));
+
+                    en_passant = 0;
+                }
+            }
+        }
+    }
+
+    // making en passant possible
+    if (moveType == (turn_G ? 0 : 6))
+    {
+
+        if (abs(start - end) == 16)
+        {
+
+            en_passant = turn_G ? (start + 8) : (start - 8);
+        }
+        else
+        {
+            en_passant = 0;
+        }
+    }
+    else
+    {
+        en_passant = 0;
+    }
+    // Casteling
+    int rook_casteling_move_positions[8] = {0, 2, 7, 4, 56, 58, 63, 60};
+    if (moveType == (turn_G ? 5 : 11) && abs(start - end) == 2)
+    {
+        int rookStart, rookEnd;
+        if (turn_G)
+        {
+            if (end < start)
+            {
+                // Kingside castling
+                rookStart = rook_casteling_move_positions[0];
+                rookEnd = rook_casteling_move_positions[1];
+            }
+            else
+            {
+                // Queenside castling
+                rookStart = rook_casteling_move_positions[2];
+                rookEnd = rook_casteling_move_positions[3];
+            }
+        }
+        else
+        {
+            if (end > start)
+            {
+                // Kingside castling
+                rookStart = rook_casteling_move_positions[4];
+                rookEnd = rook_casteling_move_positions[5];
+            }
+            else
+            {
+                // Queenside castling
+                rookStart = rook_casteling_move_positions[6];
+                rookEnd = rook_casteling_move_positions[7];
+            }
+        }
+
+        // Move the rook
+        for (int board_idx = 0; int(board_idx) < 12; board_idx++)
+        {
+            if ((boards[board_idx] & (1ULL << rookStart)) != 0)
+            {
+                boards[board_idx] &= ~(1ULL << rookStart);
+                boards[board_idx] |= (1ULL << rookEnd);
+                break;
+            }
+        }
+    }
+    bool is_one_casteling_true = std::any_of(std::begin(castling), std::end(castling), [](bool v)
+                                             { return v; });
+    std::vector<int> own_rooks, enemy_rooks;
+    int rook_positions[4] = {56, 63, 0, 7};
+    for (int i = 0; i < 4; ++i)
+    {
+        if (castling[i])
+        {
+            if ((turn_G && i >= 2) || (!turn_G && i < 2))
+            {
+                own_rooks.push_back(rook_positions[i]);
+            }
+            else
+            {
+                enemy_rooks.push_back(rook_positions[i]);
+            }
+        }
+    }
+    if (is_one_casteling_true)
+    {
+
+        if (own_rooks.size() > 0)
+        {
+
+            if ((start == 7 && turn_G == 1) || (start == 63 && turn_G == 0))
+            {
+
+                castling[turn_G ? 3 : 1] = false;
+            }
+            else if ((start == 0 && turn_G == 1) || (start == 56 && turn_G == 0))
+            {
+                castling[turn_G ? 2 : 0] = false;
+            }
+            if ((start == 3 && turn_G == 1) || (start == 59 && turn_G == 0))
+            {
+                castling[turn_G ? 3 : 1] = false;
+                castling[turn_G ? 2 : 0] = false;
+            }
+        }
+        if (enemy_rooks.size() > 0)
+        {
+            if ((end == 7 && turn_G == 0) || (end == 63 && turn_G == 1))
+            {
+                castling[turn_G ? 1 : 3] = false;
+            }
+            else if ((end == 0 && turn_G == 0) || (end == 56 && turn_G == 1))
+            {
+                castling[turn_G ? 0 : 2] = false;
+            }
+        }
+    }
+    // normel move
+    for (int board_idx_enemy = 0; int(board_idx_enemy) < 12; board_idx_enemy++)
+    {
+        if ((boards[board_idx_enemy] & (1ULL << end)) != 0)
+        {
+            boards[board_idx_enemy] &= ~(1ULL << end);
+            break;
+        }
+    }
+
+    boards[moveType] &= ~(1ULL << start);
+    if (isPromotion)
+    {
+        boards[promotionType + (turn_G ? 1 : 7)] |= (1ULL << end);
+    }
+    else
+    {
+        boards[moveType] |= (1ULL << end);
+    }
+
+    turn_G = !turn_G;
 }
