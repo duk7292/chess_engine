@@ -9,15 +9,8 @@
 #include <future>
 #include "Main.h"
 #include "Bitboards.h"
-void printArray(const uint64_t *arr, size_t size)
-{
-    for (size_t i = 0; i < size; i++)
-    {
-        std::cout << arr[i] << " ";
-    }
-    std::cout << std::endl;
-}
-
+#include "TestLegalMovesCode.h"
+#include "MinMax.h"
 uint16_t encodeMove(const std::string &move)
 {
     // Extrahieren der Start- und Zielpositionen aus der Notation
@@ -109,76 +102,6 @@ std::string decodeMove(uint16_t move)
     }
 
     return decodedMove;
-}
-bool make_moves_unit_test()
-{
-    std::vector<uint16_t> Moves = {1025, 1383, 773, 708, 706, 1804, 1153, 67, 7793, 327, 2618};
-    std::vector<std::string> FENs_before = {
-        "rnbqk2r/pp1pppbp/2p2np1/8/2P5/4P1P1/PP1P1PBP/RNBQK1NR|KQkq|--|1",
-        "rnb1kb1r/pp2pppp/3p1n2/q1p5/4P3/2P2B2/PP1P1PPP/RNBQK1NR|KQkq|--|0",
-        "r1bqkbnr/pppn2pp/3p4/4pp2/3P4/2N1P2P/PPP2PP1/R1BQKBNR|KQkq|--|1",
-        "r1bqkbnr/pppn2pp/3p4/4pp2/3P4/2N1P2P/PPPB1PP1/R2QKBNR|KQkq|--|1",
-        "rnbqk1nr/pp2bppp/3p4/2p1p3/4P3/2N2N2/PPPP1PPP/R1BQKB1R|KQkq|--|1",
-        "r1bqkbnr/1pp2ppp/p1np4/4p3/4P3/2N3P1/PPPP1P1P/R1BQKBNR|KQkq|--|1",
-        "r2qkbnr/pbpp1ppp/1pn1p3/8/3PP3/3Q4/PPP2PPP/RNB1KBNR|KQkq|--|1",
-        "rn1qkb1r/p2pppp1/bp3n1p/2p5/2P5/4PNP1/PP1PBP1P/RNBQK2R|KQkq|--|1",
-        "rnbqk2r/pp4Pp/1bp5/8/3PP3/PPPB1N1P/1N2Q1B1/R3K2R|KQkq|--|1",
-        "r2qkbnr/pp1npppp/2p5/3p1bB1/3P4/5N2/PPPNPPPP/R2QKB1R|KQkq|--|1",
-        "rnb1kb1r/pp2pp1p/3p1np1/q1p5/4P3/2P2BP1/PP1P2PP/RNBQK1NR|KQkq|--|0"};
-    std::vector<std::string> FENs_after = {
-        "rnbqk2r/pp1pppbp/2p2np1/8/2P5/4P1PN/PP1P1PBP/RNBQK2R|KQkq|--|0",
-        "rnb1kb1r/pp2pppp/3p1n2/2p5/4P3/2q2B2/PP1P1PPP/RNBQK1NR|KQkq|--|1",
-        "r1bqkbnr/pppn2pp/3p4/4pp2/3P4/2N1P2P/PPPB1PP1/R2QKBNR|KQkq|--|0",
-        "r1bqkbnr/pppn2pp/3p4/4pp2/3P4/2N1P2P/PPPBQPP1/R3KBNR|KQkq|--|0",
-        "rnbqk1nr/pp2bppp/3p4/2p1p3/4P3/2N2N2/PPPPBPPP/R1BQK2R|KQkq|--|0",
-        "r1bqkbnr/1pp2ppp/p1np4/4p3/3PP3/2N3P1/PPP2P1P/R1BQKBNR|KQkq|20|0",
-        "r2qkbnr/pbpp1ppp/1pn1p3/8/3PP3/3Q1N2/PPP2PPP/RNB1KB1R|KQkq|--|0",
-        "rn1qkb1r/p2pppp1/bp3n1p/2p5/2P5/4PNP1/PP1PBP1P/RNBQ1RK1|--kq|--|0",
-        "rnbqk1Nr/pp5p/1bp5/8/3PP3/PPPB1N1P/1N2Q1B1/R3K2R|KQkq|--|0",
-        "r2qkbnr/pp1npppp/2p5/3p1bB1/3P4/5N2/PPPNPPPP/2RQKB1R|K-kq|--|0",
-        "rnb1k2r/pp2pp1p/3p1npb/q1p5/4P3/2P2BP1/PP1P2PP/RNBQK1NR|KQkq|--|1"};
-    bool result = true;
-    for (size_t i = 0; i < FENs_before.size(); i++)
-    {
-        const auto &FEN_b = FENs_before[i];
-        const auto &FEN_a = FENs_after[i];
-        Bitboards *bitboards_org = new Bitboards();
-        bitboards_org->write_boards_from_FEN(FEN_b);
-        Bitboards *bitboards = new Bitboards();
-        bitboards->write_boards_from_FEN(FEN_a);
-        bitboards_org->make_move(Moves[i]);
-        std::vector<uint16_t> legalMoves_org = bitboards_org->get_legal_moves();
-        std::vector<uint16_t> legalMoves = bitboards->get_legal_moves();
-        bool test_res = true;
-        if (legalMoves.size() != legalMoves_org.size())
-        {
-            result = false;
-            test_res = false;
-            std::cout << " 🔴 "
-                      << "test " << (int)i << " failed" << std::endl;
-        }
-        else
-        {
-            for (size_t j = 0; j < legalMoves.size(); j++)
-            {
-                if (legalMoves[j] != legalMoves_org[j])
-                {
-                    result = false;
-                    test_res = false;
-                    std::cout << " 🔴 "
-                              << "test " << (int)i << " failed" << std::endl;
-                    break;
-                }
-            }
-        }
-
-        if (test_res)
-        {
-            std::cout << " 🟢 "
-                      << "test " << (int)i << " passed" << std::endl;
-        }
-    }
-    return result;
 }
 
 // Eine einfache Hash-Funktion für ein Schachbrett
@@ -273,10 +196,17 @@ void run_perft_test_and_print_node_counts(const std::string &fen, int maxDepth)
     }
 }
 
-// int main()
+int main()
+{
+
+    MinMax *minMax = new MinMax();
+    uint16_t bestMove = minMax->get_best_move("rnbqkbnr/pppppppp/8/8/8/8/PPPPP1PP/RNBQKBNR|KQkq|--|1", 2);
+    std::cout << "Best Move: " << decodeMove(bestMove) << std::endl;
+    return 0;
+}
 // {
 //     Bitboards *bitboards = new Bitboards();
-//     bitboards->write_boards_from_FEN("8/2p5/3p4/KP5r/1R2Pp1k/8/6P1/8|----|19|0");
+//     bitboards->write_boards_from_FEN("8/8/8/KPpp3r/1R2Pp1k/8/6P1/8|----|45|1");
 //     std::vector<uint16_t> legalMoves = bitboards->get_legal_moves();
 //     // printArray(bitboards->get_boards(), 12);
 //     for (const auto &move : legalMoves)
@@ -285,50 +215,11 @@ void run_perft_test_and_print_node_counts(const std::string &fen, int maxDepth)
 //     }
 //     return 0;
 // }
-int main()
-{
-    std::cout << "Perft Position Writer" << std::endl;
-    std::string fen = "rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R|KQ--|--|1";
-    int depth = 5; // oder jede gewünschte Tiefe
-    run_perft_test_and_print_node_counts(fen, depth);
-    return 0;
-}
-// E.P DisC DoubC
-// void printBitboard(uint64_t bitboard)
-// {
-//     for (int row = 0; row < 8; ++row)
-//     {
-//         for (int col = 0; col < 8; ++col)
-//         {
-//             // Berechnen Sie die Position im Bitboard
-//             int position = row * 8 + col;
-
-//             // Prüfen Sie, ob das Bit an dieser Position gesetzt ist
-//             if (bitboard & (1ULL << position))
-//             {
-//                 std::cout << "1 ";
-//             }
-//             else
-//             {
-//                 std::cout << ". ";
-//             }
-//         }
-//         std::cout << std::endl;
-//     }
-// }
-
 // int main()
 // {
-//     Bitboards board;
-//     board.write_boards_from_FEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR|KQkq|--|1");
-//     for (int i = 0; i < 4; i++)
-//     {
-//         std::string input;
-//         std::getline(std::cin, input);
-//         board.make_move(encodeMove(input));
-//         printBitboard(board.get_boards()[0]);
-//         std::cout << std::endl;
-//         printBitboard(board.get_boards()[6]);
-//         std::cout << (int)board.get_en_passant() << std::endl;
-//     }
+//     std::cout << "Perft Position Writer" << std::endl;
+//     std::string fen = "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R|KQkq|--|1";
+//     int depth = 7; // oder jede gewünschte Tiefe
+//     run_perft_test_and_print_node_counts(fen, depth);
+//     return 0;
 // }

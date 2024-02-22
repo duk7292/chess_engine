@@ -18,3 +18,7 @@
     der erste fehler an meinem code der mir auffiel war das der könig gegner schlagen könnte welche gedeckt werden.
 22.01.2024
     ich habe die restlichen fehler im code gelöst und ein test mit 28 Miliionen positionen gemacht mit 0 fehlern.
+18.02.2024
+    ich schreibe code welcher verschiedene perft tests macht damit ich später einfach optimierungen an dem legal moves code machen kann
+22.02.2024
+    ich fange den minmax algorithmus an mit multithreading

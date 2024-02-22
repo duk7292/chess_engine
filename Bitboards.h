@@ -19,15 +19,6 @@ private:
 
     // absolute moves
 
-    std::vector<uint16_t> get_legal_rook_moves_absolute(int turn);
-    std::vector<uint16_t> get_legal_bishop_moves_absolute(int turn);
-    std::vector<uint16_t> get_legal_queen_moves_absolute(int turn);
-    std::vector<uint16_t> get_legal_knight_moves_absolute(int turn);
-    std::vector<uint16_t> get_legal_pawn_moves_absolute(int turn);
-    std::vector<uint16_t> get_legal_king_moves_absolute(int turn);
-
-    bool is_check(std::vector<uint16_t> enemy_moves, int turn);
-
     std::vector<std::vector<uint8_t>> get_king_prot_lines(int turn);
 
     std::vector<uint16_t> erase_ilegal_moves(std::vector<uint16_t> moves, std::vector<std::vector<uint8_t>> king_prot_lines, int turn);
@@ -44,9 +35,16 @@ public:
     Bitboards();
     ~Bitboards();
 
+    std::vector<uint16_t> get_legal_rook_moves_absolute(int turn);
+    std::vector<uint16_t> get_legal_bishop_moves_absolute(int turn);
+    std::vector<uint16_t> get_legal_queen_moves_absolute(int turn);
+    std::vector<uint16_t> get_legal_knight_moves_absolute(int turn);
+    std::vector<uint16_t> get_legal_pawn_moves_absolute(int turn);
+    std::vector<uint16_t> get_legal_king_moves_absolute(int turn);
+
     void write_boards_from_FEN(std::string FEN);
     void copy_state(Bitboards *bitboards);
-
+    bool is_check(std::vector<uint16_t> enemy_moves, int turn);
     void make_move(uint16_t move);
     uint64_t *get_boards();
     int get_turn();

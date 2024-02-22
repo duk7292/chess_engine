@@ -1303,125 +1303,40 @@ std::vector<uint16_t> Bitboards::erase_ilegal_moves(std::vector<uint16_t> moves,
 
     if (en_passant)
     {
-
-        std::vector<uint8_t> en_passant_killer_pos_vec = get_enpassant_killer_pos(turn);
-        uint8_t en_passant_enemy_pos = en_passant + (turn ? -8 : 8);
         std::vector<uint16_t> en_passant_moves_to_erase;
-        uint8_t king_positions;
-        for (int i = 0; i < 64; i++)
+        for (uint16_t move : moves)
         {
-            if (boards[turn ? 5 : 11] & (1ULL << i))
+            int start = move & 0x3F;
+            if ((boards[turn_G ? 0 : 6] & (1ULL << (start))) != 0)
             {
-                king_positions = (static_cast<uint8_t>(i));
-            }
-        }
-        for (int en_passant_killer_pos_idx = 0; en_passant_killer_pos_idx < (int)en_passant_killer_pos_vec.size(); en_passant_killer_pos_idx++)
-        {
+                Bitboards *temp = new Bitboards();
+                temp->copy_state(this);
 
-            int dif = en_passant_enemy_pos - king_positions;
+                temp->make_move(move);
 
-            int direction = 0;
-            if (dif % 8 == 0)
-            {
+                std::vector<uint16_t> enemy_moves = temp->get_legal_king_moves_absolute(!turn);
 
-                continue;
-            }
-            else if (dif % 9 == 0)
-            {
+                std::vector<uint16_t> enemy_rook_moves = temp->get_legal_rook_moves_absolute(!turn);
+                enemy_moves.insert(enemy_moves.end(), enemy_rook_moves.begin(), enemy_rook_moves.end());
 
-                direction = dif > 0 ? 9 : -9;
-            }
-            else if (dif % 7 == 0)
-            {
-                direction = dif > 0 ? 7 : -7;
-            }
-            else
-            {
-                direction = dif > 0 ? 1 : -1;
-            }
+                std::vector<uint16_t> enemy_bishop_moves = temp->get_legal_bishop_moves_absolute(!turn);
+                enemy_moves.insert(enemy_moves.end(), enemy_bishop_moves.begin(), enemy_bishop_moves.end());
 
-            bool piece_in_the_way = false;
-            bool at_enpassent_pos = false;
-            bool irrelevant_piece_after = false;
-            bool relevant_piece_after = false;
-            for (int current_postion = king_positions; current_postion <= 64; current_postion += direction)
-            {
+                std::vector<uint16_t> enemy_queen_moves = temp->get_legal_queen_moves_absolute(!turn);
+                enemy_moves.insert(enemy_moves.end(), enemy_queen_moves.begin(), enemy_queen_moves.end());
 
-                for (int board_idx = 0; board_idx < 12; board_idx++)
-                {
-                    if ((boards[board_idx] & (1ULL << current_postion)) != 0)
-                    {
+                std::vector<uint16_t> enemy_knight_moves = temp->get_legal_knight_moves_absolute(!turn);
+                enemy_moves.insert(enemy_moves.end(), enemy_knight_moves.begin(), enemy_knight_moves.end());
 
-                        if (current_postion != king_positions && !at_enpassent_pos && current_postion != en_passant_enemy_pos && current_postion != en_passant_killer_pos_vec[en_passant_killer_pos_idx])
-                        {
+                std::vector<uint16_t> enemy_pawn_moves = temp->get_legal_pawn_moves_absolute(!turn);
+                enemy_moves.insert(enemy_moves.end(), enemy_pawn_moves.begin(), enemy_pawn_moves.end());
 
-                            piece_in_the_way = true;
-                            break;
-                        }
-                        if (at_enpassent_pos && !irrelevant_piece_after)
-                        {
-                            if (direction == 1 || direction == -1)
-                            {
-                                if ((board_idx != (turn ? 9 : 3) && board_idx != (turn ? 10
-                                                                                       : 4)))
-                                {
-                                    if (current_postion - direction != en_passant_enemy_pos)
-                                    {
-                                        irrelevant_piece_after = true;
-                                    }
-                                }
-                                else
-                                {
-
-                                    relevant_piece_after = true;
-                                }
-                            }
-                            else if (board_idx != (turn ? 8 : 2) && board_idx != (turn ? 10
-                                                                                       : 4))
-                            {
-                                irrelevant_piece_after = true;
-                            }
-                            else
-                            {
-
-                                relevant_piece_after = true;
-                            }
-                        }
-                    }
-                }
-                if (current_postion == en_passant_enemy_pos)
-                {
-                    at_enpassent_pos = true;
-                }
-                if (piece_in_the_way)
+                if (temp->is_check(enemy_moves, turn))
                 {
 
-                    break;
+                    en_passant_moves_to_erase.push_back(move);
                 }
-                if (current_postion > 64 || current_postion < 0)
-                {
-                    break;
-                }
-                if ((direction == 1 && current_postion % 8 == 7) || (direction == -1 && current_postion % 8 == 0))
-                {
-                    break;
-                }
-                if ((direction == 9 && current_postion % 8 == 7) || (direction == -7 && current_postion % 8 == 0))
-                {
-                    break;
-                }
-                if ((direction == 7 && current_postion % 8 == 7) || (direction == -9 && current_postion % 8 == 0))
-                {
-                    break;
-                }
-            }
-
-            if (relevant_piece_after)
-            {
-
-                uint16_t move = 0;
-                move = en_passant << 6 | en_passant_killer_pos_vec[en_passant_killer_pos_idx];
-                en_passant_moves_to_erase.push_back(move);
+                delete temp;
             }
         }
 
@@ -1737,8 +1652,14 @@ void Bitboards::make_move(uint16_t move)
 
         if (abs(start - end) == 16)
         {
-
-            en_passant = turn_G ? (start + 8) : (start - 8);
+            if (((boards[turn_G ? 6 : 0] & (1ULL << (end + 1))) != 0) || ((boards[turn_G ? 6 : 0] & (1ULL << (end - 1))) != 0))
+            {
+                en_passant = turn_G ? (start + 8) : (start - 8);
+            }
+            else
+            {
+                en_passant = 0;
+            }
         }
         else
         {
@@ -1774,14 +1695,14 @@ void Bitboards::make_move(uint16_t move)
             if (end > start)
             {
                 // Kingside castling
-                rookStart = rook_casteling_move_positions[4];
-                rookEnd = rook_casteling_move_positions[5];
+                rookStart = rook_casteling_move_positions[6];
+                rookEnd = rook_casteling_move_positions[7];
             }
             else
             {
                 // Queenside castling
-                rookStart = rook_casteling_move_positions[6];
-                rookEnd = rook_casteling_move_positions[7];
+                rookStart = rook_casteling_move_positions[4];
+                rookEnd = rook_casteling_move_positions[5];
             }
         }
 
