@@ -195,15 +195,97 @@ void run_perft_test_and_print_node_counts(const std::string &fen, int maxDepth)
         std::cout << "Depth " << depth << ": " << positions.size() << " unique positions." << std::endl;
     }
 }
+void printBits(uint16_t value)
+{
+    for (int i = 15; i >= 0; --i)
+    { // Start from the most significant bit
+        if (i % 3 == 2)
+        {
+            std::cout << ".";
+        }
+        if (value & (1 << i))
+        { // If the ith bit is set
+            std::cout << "1";
+        }
+        else
+        {
+            std::cout << "0";
+        }
+    }
+    std::cout << std::endl; // New line after printing all bits
+}
+int CNNumberToMove(int number)
+{
+    uint16_t move = 0;
+    number += 4096;
+    if (number < 4096)
+    {
+        move = number;
+        return move;
+    }
+
+    number -= 4096;
+    int color = number / 88;
+
+    number %= 88;
+    int promotion = number % 4;
+    int start_y = color ? 15 : 55;
+    int end_y = color ? 7 : 63;
+    // normal Promotion
+    if (number < 32)
+    {
+
+        int x_offset = number / 4;
+
+        move |= ((end_y - x_offset) << 6);
+        move |= (start_y - x_offset);
+        move |= (1 << 12);
+        move |= (promotion << 13);
+        return move;
+    }
+    number -= 32;
+    if (number < 48)
+    {
+        int x_offset_start = 1 + number / 8;
+        int x_offset_end = x_offset_start + ((number % 2 == 0) ? 1 : -1);
+        move |= ((end_y - x_offset_end) << 6);
+        move |= (start_y - x_offset_start);
+        move |= (1 << 12);
+        move |= (promotion << 13);
+        return move;
+    }
+    number -= 48;
+    if (number < 4)
+    {
+
+        move |= ((end_y - 1) << 6);
+        move |= (start_y);
+        move |= (1 << 12);
+        move |= (promotion << 13);
+        return move;
+    }
+    move |= ((end_y - 6) << 6);
+    move |= (start_y - 7);
+    move |= (1 << 12);
+    move |= (promotion << 13);
+    return move;
+}
 
 int main()
 {
 
-    MinMax *minMax = new MinMax();
-    uint16_t bestMove = minMax->get_best_move("rnbqkbnr/pppppppp/8/8/8/8/PPPPP1PP/RNBQKBNR|KQkq|--|1", 2);
-    std::cout << "Best Move: " << decodeMove(bestMove) << std::endl;
+    // MinMax *minMax = new MinMax();
+    // uint16_t bestMove;
+
+    // bestMove = minMax->get_best_move("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR|KQkq|--|1", 10);
+
+    // std::cout << "Best Move: " << decodeMove(bestMove) << std::endl;
+
+    std::cout << decodeMove(CNNumberToMove(32)) << std::endl;
+
     return 0;
 }
+
 // {
 //     Bitboards *bitboards = new Bitboards();
 //     bitboards->write_boards_from_FEN("8/8/8/KPpp3r/1R2Pp1k/8/6P1/8|----|45|1");
