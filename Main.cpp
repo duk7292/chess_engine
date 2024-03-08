@@ -214,10 +214,10 @@ void printBits(uint16_t value)
     }
     std::cout << std::endl; // New line after printing all bits
 }
-int CNNumberToMove(int number)
+uint16_t CNNumberToMove(int number)
 {
     uint16_t move = 0;
-    number += 4096;
+  
     if (number < 4096)
     {
         move = number;
@@ -247,7 +247,7 @@ int CNNumberToMove(int number)
     if (number < 48)
     {
         int x_offset_start = 1 + number / 8;
-        int x_offset_end = x_offset_start + ((number % 2 == 0) ? 1 : -1);
+        int x_offset_end = x_offset_start + ((number % 8 < 4) ? 1 : -1);
         move |= ((end_y - x_offset_end) << 6);
         move |= (start_y - x_offset_start);
         move |= (1 << 12);
@@ -270,6 +270,53 @@ int CNNumberToMove(int number)
     move |= (promotion << 13);
     return move;
 }
+int MoveToCNNumber(uint16_t move)
+{
+    move &= ~(1 << 15);
+        
+
+    int number = 0;
+    int promotionNumber = 0;
+    int promotion = (move >> 13) & 3;
+    int isPromotion = (move >> 12) & 1;
+    int start = (move & 63);
+    int end = (move >> 6) & 63;
+    int color, x_offset, x_offset_start, x_offset_end;
+
+    // Determine color based on startY (reverse of original logic)
+    if(isPromotion == 0){
+
+        return (int)move;
+    }
+    if (start >= 48)
+        color = 0; // White
+    else
+        color = 1; // Black
+    
+
+    if(start == end+(color ? 8: -8))
+    {
+        int x_offset = (color ? 15:55)-start;
+        promotionNumber = x_offset*4;
+    }else{
+        
+    }
+
+
+
+        
+    
+
+
+    promotionNumber += promotion;
+
+    // Adjust number based on color
+    promotionNumber += color * 88;
+
+    number = promotionNumber +4096;
+
+    return number; // The initial offset adjustment is no longer required
+}
 
 int main()
 {
@@ -281,8 +328,22 @@ int main()
 
     // std::cout << "Best Move: " << decodeMove(bestMove) << std::endl;
 
-    std::cout << decodeMove(CNNumberToMove(32)) << std::endl;
+    for(int i = 0; i < 4272;i++){
+  
+        uint16_t a = CNNumberToMove(i);
+        
+        int b  = MoveToCNNumber (a);
 
+        if(b == i){
+           // std::cout << "correct at " << i << " "<<decodeMove(a) <<std::endl;  
+        }
+        else{
+            std::cout << "false at " << i-4096 << " "<<decodeMove(a) <<std::endl;
+        }
+    
+        
+
+    }
     return 0;
 }
 
