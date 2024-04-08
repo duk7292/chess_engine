@@ -217,7 +217,7 @@ void printBits(uint16_t value)
 uint16_t CNNumberToMove(int number)
 {
     uint16_t move = 0;
-  
+
     if (number < 4096)
     {
         move = number;
@@ -273,7 +273,6 @@ uint16_t CNNumberToMove(int number)
 int MoveToCNNumber(uint16_t move)
 {
     move &= ~(1 << 15);
-        
 
     int number = 0;
     int promotionNumber = 0;
@@ -281,39 +280,52 @@ int MoveToCNNumber(uint16_t move)
     int isPromotion = (move >> 12) & 1;
     int start = (move & 63);
     int end = (move >> 6) & 63;
-    int color, x_offset, x_offset_start, x_offset_end;
+    int color;
 
     // Determine color based on startY (reverse of original logic)
-    if(isPromotion == 0){
-
+    if (isPromotion == 0)
+    {
         return (int)move;
     }
     if (start >= 48)
         color = 0; // White
     else
         color = 1; // Black
-    
-
-    if(start == end+(color ? 8: -8))
+    if (start == end + (color ? 8 : -8))
     {
-        int x_offset = (color ? 15:55)-start;
-        promotionNumber = x_offset*4;
-    }else{
-        
+        int x_offset = (color ? 15 : 55) - start;
+        promotionNumber = x_offset * 4;
     }
+    else if ((start == (color ? 15 : 55)) | (start == (color ? 8 : 48)))
+    {
+        if (start == (color ? 15 : 55))
+        {
+            promotionNumber = 80;
+        }
+        else
+        {
+            promotionNumber = 84;
+        }
+    }
+    else
+    {
+        promotionNumber += 32;
+        int x_offset_start = (color ? 15 : 55) - start;
+        int x_offset_end = (color ? 7 : 63) - end;
 
+        promotionNumber += (x_offset_start - 1) * 8;
 
+        promotionNumber += (x_offset_end > x_offset_start) ? 0 : 4;
 
-        
-    
-
+        // std::cout << number <<" "<<x_offset_start << std::endl;
+    }
 
     promotionNumber += promotion;
 
     // Adjust number based on color
     promotionNumber += color * 88;
 
-    number = promotionNumber +4096;
+    number = promotionNumber + 4096;
 
     return number; // The initial offset adjustment is no longer required
 }
@@ -328,21 +340,21 @@ int main()
 
     // std::cout << "Best Move: " << decodeMove(bestMove) << std::endl;
 
-    for(int i = 0; i < 4272;i++){
-  
+    for (int i = 0; i < 4272; i++)
+    {
+
         uint16_t a = CNNumberToMove(i);
-        
-        int b  = MoveToCNNumber (a);
 
-        if(b == i){
-           // std::cout << "correct at " << i << " "<<decodeMove(a) <<std::endl;  
-        }
-        else{
-            std::cout << "false at " << i-4096 << " "<<decodeMove(a) <<std::endl;
-        }
-    
-        
+        int b = MoveToCNNumber(a);
 
+        if (b == i)
+        {
+            // std::cout << "correct at " << i << " "<<decodeMove(a) <<std::endl;
+        }
+        else
+        {
+            std::cout << "false at " << i - 4096 << " " << decodeMove(a) << std::endl;
+        }
     }
     return 0;
 }
