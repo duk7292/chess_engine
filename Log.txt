@@ -24,3 +24,5 @@
     ich fange den minmax algorithmus an mit multithreading
 08.03.2024
     ich um den minimax zu verbessseren werde ich die legal moves berechen an ein CNN weitergeben inerhalb des minmax baums da dieser schneller geht dafür mache ich ein algorithmus welcher die output indexe des CNN in uint16_t moves umwadelt un eine umkehr funktion dieser für das training dafür nehme ich an das es inklusive promotions 4272 moves gibt also 64*64 + 176 promotions.
+08.04.2024
+    ich strukturiere meine files und den code und packe alte sachen für erste in einen seperaten Ordner
