@@ -50,8 +50,12 @@ public:
     int get_turn();
     std::vector<uint16_t> get_legal_moves();
 
+    std::vector<uint16_t> get_absolute_moves();
+
     uint8_t get_en_passant();
 
+    bool *get_castling();
+    void flip_turn() { turn_G = !turn_G; }
     std::string generateFEN() const
     {
         std::string FEN;

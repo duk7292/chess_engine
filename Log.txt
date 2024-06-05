@@ -26,3 +26,18 @@
     ich um den minimax zu verbessseren werde ich die legal moves berechen an ein CNN weitergeben inerhalb des minmax baums da dieser schneller geht dafür mache ich ein algorithmus welcher die output indexe des CNN in uint16_t moves umwadelt un eine umkehr funktion dieser für das training dafür nehme ich an das es inklusive promotions 4272 moves gibt also 64*64 + 176 promotions.
 08.04.2024
     ich strukturiere meine files und den code und packe alte sachen für erste in einen seperaten Ordner
+09.04.2024
+    ich mache die vorbereitungen um das Neurale netz zu trainieren also die umwandlung von Bitboards in input tensor und target tensor. 
+    Da die speicherung von pytorch modellen in c++ nicht möglich ist muss ich das netzwerk in python trainieren dafür mache ich eine .csv mit den trainingsdaten 
+10.04.2024
+    ich habe das erste TestModel trainiert um die functionen und alles zu testen außerdem schreibe ich accuracy tests für Modelle
+15.04.2024
+    Nach ein paar test sieht man dass das model vergleischsweise selbst im kleinstmöglichem zustand langsamer ist als mein Code der die züge manuell berechnet deshalb kann ich 
+    das Modell nicht gebrauchen und nutzte stattdessen mein code
+20.04.2024
+    ich habe die Evaluation function angefangen mit standart Evaluations methoden
+22.05.2024
+    ich habe kleinere Fehler im Quellcode gelöst und teste nun gegen ein schachbot mit einer 550 elo 
+24.05.2024
+    ich habe in die Evaluation Funktion das Schachmatt setzten als höste priorität gestezt wodurch die 550 elo gegner Besigt worden vor weiteren test will ich aber erst den min max 
+    algorithmus optimieren

@@ -10,6 +10,40 @@
 #ifndef UTILS_H
 #define UTILS_H
 
+void testTime()
+{
+
+    Bitboards *board = new Bitboards();
+    board->write_boards_from_FEN("r1bqk2r/p1pp1ppp/2nb1n2/1pP1p3/P3P1P1/2NBQNP1/P1BP1P2/1R2K2R|K-kq|46|1");
+
+    auto start = std::chrono::high_resolution_clock::now();
+
+    for (int i = 0; i < 10000; i++)
+    {
+        board->get_legal_moves();
+    }
+
+    auto end = std::chrono::high_resolution_clock::now();
+
+    // Calculate elapsed time in milliseconds
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+
+    std::cout << "Time taken: " << duration << " milliseconds" << std::endl;
+}
+
+void printBits(uint16_t num)
+{
+    for (int bit = (sizeof(uint16_t) * 8) - 1; bit >= 0; bit--)
+    {
+        if (bit == 5 || bit == 11)
+        {
+            std::cout << "_";
+        }
+        std::cout << ((num >> bit) & 1);
+    }
+    std::cout << std::endl;
+}
+
 uint16_t encodeMove(const std::string &move)
 {
     // Extrahieren der Start- und Zielpositionen aus der Notation
@@ -101,122 +135,6 @@ std::string decodeMove(uint16_t move)
     }
 
     return decodedMove;
-}
-
-uint16_t CNNumberToMove(int number)
-{
-    uint16_t move = 0;
-
-    if (number < 4096)
-    {
-        move = number;
-        return move;
-    }
-
-    number -= 4096;
-    int color = number / 88;
-
-    number %= 88;
-    int promotion = number % 4;
-    int start_y = color ? 15 : 55;
-    int end_y = color ? 7 : 63;
-    // normal Promotion
-    if (number < 32)
-    {
-
-        int x_offset = number / 4;
-
-        move |= ((end_y - x_offset) << 6);
-        move |= (start_y - x_offset);
-        move |= (1 << 12);
-        move |= (promotion << 13);
-        return move;
-    }
-    number -= 32;
-    if (number < 48)
-    {
-        int x_offset_start = 1 + number / 8;
-        int x_offset_end = x_offset_start + ((number % 8 < 4) ? 1 : -1);
-        move |= ((end_y - x_offset_end) << 6);
-        move |= (start_y - x_offset_start);
-        move |= (1 << 12);
-        move |= (promotion << 13);
-        return move;
-    }
-    number -= 48;
-    if (number < 4)
-    {
-
-        move |= ((end_y - 1) << 6);
-        move |= (start_y);
-        move |= (1 << 12);
-        move |= (promotion << 13);
-        return move;
-    }
-    move |= ((end_y - 6) << 6);
-    move |= (start_y - 7);
-    move |= (1 << 12);
-    move |= (promotion << 13);
-    return move;
-}
-int MoveToCNNumber(uint16_t move)
-{
-    move &= ~(1 << 15);
-
-    int number = 0;
-    int promotionNumber = 0;
-    int promotion = (move >> 13) & 3;
-    int isPromotion = (move >> 12) & 1;
-    int start = (move & 63);
-    int end = (move >> 6) & 63;
-    int color;
-
-    // Determine color based on startY (reverse of original logic)
-    if (isPromotion == 0)
-    {
-        return (int)move;
-    }
-    if (start >= 48)
-        color = 0; // White
-    else
-        color = 1; // Black
-    if (start == end + (color ? 8 : -8))
-    {
-        int x_offset = (color ? 15 : 55) - start;
-        promotionNumber = x_offset * 4;
-    }
-    else if ((start == (color ? 15 : 55)) | (start == (color ? 8 : 48)))
-    {
-        if (start == (color ? 15 : 55))
-        {
-            promotionNumber = 80;
-        }
-        else
-        {
-            promotionNumber = 84;
-        }
-    }
-    else
-    {
-        promotionNumber += 32;
-        int x_offset_start = (color ? 15 : 55) - start;
-        int x_offset_end = (color ? 7 : 63) - end;
-
-        promotionNumber += (x_offset_start - 1) * 8;
-
-        promotionNumber += (x_offset_end > x_offset_start) ? 0 : 4;
-
-        // std::cout << number <<" "<<x_offset_start << std::endl;
-    }
-
-    promotionNumber += promotion;
-
-    // Adjust number based on color
-    promotionNumber += color * 88;
-
-    number = promotionNumber + 4096;
-
-    return number; // The initial offset adjustment is no longer required
 }
 
 #endif
