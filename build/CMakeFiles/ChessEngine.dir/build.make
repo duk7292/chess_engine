@@ -128,14 +128,14 @@ ChessEngine: /home/duk/Dependecies/libtorch/lib/libtorch.so
 ChessEngine: /home/duk/Dependecies/libtorch/lib/libc10.so
 ChessEngine: /home/duk/Dependecies/libtorch/lib/libkineto.a
 ChessEngine: /usr/lib/x86_64-linux-gnu/libcuda.so
-ChessEngine: /usr/local/cuda/lib64/libnvrtc.so
-ChessEngine: /usr/local/cuda/lib64/libnvToolsExt.so
-ChessEngine: /usr/local/cuda/lib64/libcudart.so
+ChessEngine: /usr/local/cuda-12.4/lib64/libnvrtc.so
+ChessEngine: /usr/lib/x86_64-linux-gnu/libnvToolsExt.so
+ChessEngine: /usr/local/cuda-12.4/lib64/libcudart.so
 ChessEngine: /home/duk/Dependecies/libtorch/lib/libc10_cuda.so
 ChessEngine: /home/duk/Dependecies/libtorch/lib/libc10_cuda.so
 ChessEngine: /home/duk/Dependecies/libtorch/lib/libc10.so
-ChessEngine: /usr/local/cuda/lib64/libcudart.so
-ChessEngine: /usr/local/cuda/lib64/libnvToolsExt.so
+ChessEngine: /usr/local/cuda-12.4/lib64/libcudart.so
+ChessEngine: /usr/local/cuda-12.4/lib64/libnvToolsExt.so
 ChessEngine: CMakeFiles/ChessEngine.dir/link.txt
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/duk/Documents/C++/chess_engine/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Linking CXX executable ChessEngine"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/ChessEngine.dir/link.txt --verbose=$(VERBOSE)

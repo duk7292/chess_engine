@@ -4,7 +4,7 @@
 # compile CXX with /usr/bin/c++
 CXX_DEFINES = -DUSE_C10D_GLOO -DUSE_C10D_NCCL -DUSE_DISTRIBUTED -DUSE_RPC -DUSE_TENSORPIPE
 
-CXX_INCLUDES = -I/home/duk/Documents/C++/chess_engine/./Chess_Library -isystem /home/duk/Dependecies/libtorch/include -isystem /home/duk/Dependecies/libtorch/include/torch/csrc/api/include -isystem /usr/local/cuda/include
+CXX_INCLUDES = -I/home/duk/Documents/C++/chess_engine/./Chess_Library -isystem /home/duk/Dependecies/libtorch/include -isystem /home/duk/Dependecies/libtorch/include/torch/csrc/api/include -isystem /usr/local/cuda-12.4/include
 
 CXX_FLAGS =  -D_GLIBCXX_USE_CXX11_ABI=1 -D_GLIBCXX_USE_CXX11_ABI=1 -std=gnu++17
 
