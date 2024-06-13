@@ -17,7 +17,7 @@ int main()
 
     uint16_t bestMove;
 
-    bestMove = minMax->get_best_move("rnbqkb1r/ppp2ppp/5n2/3p4/8/2N2N2/PPPP1PPP/R1BQKB1R|----|--|1", 10);
+    bestMove = minMax->get_best_move("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR|----|--|1", 10);
 
     std::cout << "Best Move: " << decodeMove(bestMove) << std::endl;
 

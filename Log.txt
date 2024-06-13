@@ -1,43 +1,42 @@
 23.12.2023
-    Ich habe alles aufgesetzt und die grobe Struktur geplant.
-    ich habe mit der legal moves Berechnung Angefangen welche ich alle in einem Array speichere
-    ich teile diese auf angefangen mit den rooks.
-    außerdem habe ich die legalen moves des bishops und der queen gemacht.
+Ich habe alles aufgesetzt und die grobe Struktur geplant. Ich habe mit der Berechnung der legalen Züge begonnen, welche ich alle in einem Array speichere. Ich habe mit den Türmen (rooks) angefangen. Außerdem habe ich die legalen Züge des Läufers (bishops) und der Dame (queen) berechnet.
 24.12.2023
-    ich habe die legalen moves der knights berchnet
+Ich habe die legalen Züge der Springer (knights) berechnet.
 25.12.2023
-    ich habe die legal pawn moves angefangen dafür habe ich meine custom FEN strings erweitert
-26.12.2023 
-    ich habe die legal pawn moves beendet
-01.31.2024
-    um die legalen king moves zu brechnen muss ich erst alle moves des gegners berechnen außerdem muss ich die moves rausfiltern welche den könig in check setzten.
-5.01.2024
-    ich habe die casteling_moves Berechnung gemacht
+Ich habe mit den legalen Zügen der Bauern (pawns) begonnen. Dafür habe ich meine benutzerdefinierten FEN-Strings erweitert.
+26.12.2023
+Ich habe die legalen Züge der Bauern abgeschlossen.
+31.01.2024
+Um die legalen Züge des Königs zu berechnen, muss ich zuerst alle Züge des Gegners berechnen. Außerdem muss ich die Züge herausfiltern, die den König in Schach setzen.
+05.01.2024
+Ich habe die Berechnung der Rochade (castling moves) durchgeführt.
 13.01.2024
-    ich habe eine FEN String datenbank genommen und 56000 Fen strings berechen lassen. Um zu testen ob alle richtig sind habe ich auch eine python-chess libary die gleichen FEN strings gegeben
-    der erste fehler an meinem code der mir auffiel war das der könig gegner schlagen könnte welche gedeckt werden.
+Ich habe eine FEN-String-Datenbank verwendet und 56.000 FEN-Strings berechnen lassen. Um zu testen, ob alle korrekt sind, habe ich auch eine Python-Schachbibliothek die gleichen FEN-Strings überprüfen lassen. Der erste Fehler, der mir in meinem Code auffiel, war, dass der König Gegner schlagen könnte, die gedeckt sind.
 22.01.2024
-    ich habe die restlichen fehler im code gelöst und ein test mit 28 Miliionen positionen gemacht mit 0 fehlern.
+Ich habe die restlichen Fehler im Code gelöst und einen Test mit 28 Millionen Positionen durchgeführt, ohne Fehler.
 18.02.2024
-    ich schreibe code welcher verschiedene perft tests macht damit ich später einfach optimierungen an dem legal moves code machen kann
+Ich schreibe Code, der verschiedene Perft-Tests durchführt, damit ich später einfach Optimierungen am Code für die legalen Züge vornehmen kann.
 22.02.2024
-    ich fange den minmax algorithmus an mit multithreading
+Ich beginne mit dem Minimax-Algorithmus mit Multithreading.
 08.03.2024
-    ich um den minimax zu verbessseren werde ich die legal moves berechen an ein CNN weitergeben inerhalb des minmax baums da dieser schneller geht dafür mache ich ein algorithmus welcher die output indexe des CNN in uint16_t moves umwadelt un eine umkehr funktion dieser für das training dafür nehme ich an das es inklusive promotions 4272 moves gibt also 64*64 + 176 promotions.
+Um den Minimax-Algorithmus zu verbessern, werde ich die Berechnung der legalen Züge an ein CNN weitergeben innerhalb des Minimax-Baums, da dies schneller geht. Dafür schreibe ich einen Algorithmus, der die Ausgabe-Indexe des CNN in uint16_t-Züge umwandelt und eine Umkehrfunktion dafür erstellt. Ich gehe davon aus, dass es inklusive Beförderungen 4272 Züge gibt (also 64*64 + 176 Beförderungen).
 08.04.2024
-    ich strukturiere meine files und den code und packe alte sachen für erste in einen seperaten Ordner
+Ich strukturiere meine Dateien und den Code und packe alte Sachen vorerst in einen separaten Ordner.
 09.04.2024
-    ich mache die vorbereitungen um das Neurale netz zu trainieren also die umwandlung von Bitboards in input tensor und target tensor. 
-    Da die speicherung von pytorch modellen in c++ nicht möglich ist muss ich das netzwerk in python trainieren dafür mache ich eine .csv mit den trainingsdaten 
+Ich bereite die Umwandlung von Bitboards in Eingabe- und Ziel-Tensoren vor, um das neuronale Netzwerk zu trainieren. Da die Speicherung von PyTorch-Modellen in C++ nicht möglich ist, muss ich das Netzwerk in Python trainieren und erstelle dafür eine .csv-Datei mit den Trainingsdaten.
 10.04.2024
-    ich habe das erste TestModel trainiert um die functionen und alles zu testen außerdem schreibe ich accuracy tests für Modelle
+Ich habe das erste Testmodell trainiert, um die Funktionen und alles zu testen. Außerdem schreibe ich Genauigkeitstests für Modelle.
 15.04.2024
-    Nach ein paar test sieht man dass das model vergleischsweise selbst im kleinstmöglichem zustand langsamer ist als mein Code der die züge manuell berechnet deshalb kann ich 
-    das Modell nicht gebrauchen und nutzte stattdessen mein code
+Nach einigen Tests zeigte sich, dass das Modell vergleichsweise, selbst im kleinstmöglichen Zustand, langsamer ist als mein Code, der die Züge manuell berechnet. Deshalb kann ich das Modell nicht verwenden und nutze stattdessen meinen Code.
 20.04.2024
-    ich habe die Evaluation function angefangen mit standart Evaluations methoden
+Ich habe die Bewertungsfunktion mit Standardbewertungsmethoden begonnen.
 22.05.2024
-    ich habe kleinere Fehler im Quellcode gelöst und teste nun gegen ein schachbot mit einer 550 elo 
+Ich habe kleinere Fehler im Quellcode gelöst und teste nun gegen einen Schachbot mit einer Elo von 550.
 24.05.2024
-    ich habe in die Evaluation Funktion das Schachmatt setzten als höste priorität gestezt wodurch die 550 elo gegner Besigt worden vor weiteren test will ich aber erst den min max 
-    algorithmus optimieren
+Ich habe in der Bewertungsfunktion das Schachmattsetzen als höchste Priorität festgelegt, wodurch der Gegner mit 550 Elo besiegt wurde. Vor weiteren Tests will ich aber erst den Minimax-Algorithmus optimieren.
+10.05.2024
+Ich habe die Vorbereitungen für das Move-Ordering gemacht.
+11.06.2024
+Ich habe Move-Ordering implementiert.
+13.06.2024
+Ich habe Positionen zur Bewertung hinzugefügt.

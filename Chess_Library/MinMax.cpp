@@ -2,6 +2,8 @@
 
 std::vector<Bitboards> depth_1_boards;
 std::vector<int> scores_depth_1;
+std::vector<std::vector<int>> scores_depth_2;
+std::vector<std::vector<uint16_t>> moves_depth_2;
 int depth_1_done = 0;
 int depth_1_start = 0;
 std::atomic<bool> should_continue = true;
@@ -58,7 +60,30 @@ void timer_thread(int time_limit)
     should_continue = false;
     std::cout << "Time is up!" << std::endl;
 }
-int MinMax::evaluate(Bitboards *board, std::vector<uint16_t> moves, std::vector<uint16_t> moves_before)
+void MinMax::order_Moves(){
+
+    for (size_t depth = 0; depth < scores_depth_2.size(); ++depth) {
+    // Create a vector of pairs (score, move) for the current depth level
+    std::vector<std::pair<int, uint16_t>> paired;
+
+    for (size_t i = 0; i < scores_depth_2[depth].size(); ++i) {
+        paired.emplace_back(scores_depth_2[depth][i], moves_depth_2[depth][i]);
+    }
+
+    // Sort the pairs based on scores for the current depth level
+    std::sort(paired.begin(), paired.end(), [](const std::pair<int, uint16_t>& a, const std::pair<int, uint16_t>& b) {
+        return a.first > b.first; // Sort in descending order of scores
+    });
+
+    // Unpack the sorted pairs back into scores and moves for the current depth level
+    for (size_t i = 0; i < paired.size(); ++i) {
+        scores_depth_2[depth][i] = paired[i].first;
+        moves_depth_2[depth][i] = paired[i].second;
+    }
+    }
+
+}
+int MinMax::evaluate(Bitboards *board, std::vector<uint16_t> moves)
 {
     int turn = board->get_turn();
 
@@ -77,6 +102,17 @@ int MinMax::evaluate(Bitboards *board, std::vector<uint16_t> moves, std::vector<
     const int pieceValueMultiplier = 10;
     // Piece values array
     const int pieceValues[6] = {pawnValue, knightValue, bishopValue, rookValue, queenValue, kingValue};
+
+    std::vector<std::vector<int>> positionMatrix = {
+        { 0, 1, 2, 3, 3, 2, 1, 0 },
+        { 1, 2, 3, 4, 4, 3, 2, 1 },
+        { 2, 3, 4, 5, 5, 4, 3, 2 },
+        { 3, 4, 5, 6, 6, 5, 4, 3 },
+        { 3, 4, 5, 6, 6, 5, 4, 3 },
+        { 2, 3, 4, 5, 5, 4, 3, 2 },
+        { 1, 2, 3, 4, 4, 3, 2, 1 },
+        { 0, 1, 2, 3, 3, 2, 1, 0 }
+    };
 
     int score = 0;
 
@@ -104,27 +140,28 @@ int MinMax::evaluate(Bitboards *board, std::vector<uint16_t> moves, std::vector<
             return 0;
         }
     }
-    for (int i = 0; i < 12; i++)
-    {
-        for (int j = 0; j < 64; j++)
-        {
-            if (boards[i] & (1ULL << j))
-            {
+    for (int i = 0; i < 12; i++) {
+        for (int j = 0; j < 64; j++) {
+            if (boards[i] & (1ULL << j)) {
                 // Determine the piece type (0-5 for white, 6-11 for black)
                 int pieceType = i % 6;
 
-                // Add or subtract the value of the piece
-                if (i < 6)
-                {
+                // Calculate the row and column from the 0-63 index
+                int row = j / 8;
+                int col = j % 8;
+
+                // Add or subtract the value of the piece and its positional value
+                if (i < 6) {
                     score += pieceValues[pieceType] * pieceValueMultiplier;
-                }
-                else
-                {
+                    score += positionMatrix[row][col] * 2.5; // Add positional value for white pieces
+                } else {
                     score -= pieceValues[pieceType] * pieceValueMultiplier;
+                    score -= positionMatrix[row][col] * 2.5; // Subtract positional value for black pieces
                 }
             }
         }
     }
+
 
     for (uint16_t move : moves)
     {
@@ -144,7 +181,7 @@ int MinMax::evaluate(Bitboards *board, std::vector<uint16_t> moves, std::vector<
     if (turn == 0)
     {
 
-        score += moves.size();
+        score -= moves.size();
     }
     else
     {
@@ -169,6 +206,10 @@ int MinMax::evaluate(Bitboards *board, std::vector<uint16_t> moves, std::vector<
 
 uint16_t MinMax::get_best_move(std::string fen, int time)
 {
+    if (time < 3)
+    {
+        time = 3;
+    }
 
     std::thread t(timer_thread, time - 1);
 
@@ -179,19 +220,20 @@ uint16_t MinMax::get_best_move(std::string fen, int time)
 
     std::vector<uint16_t> moves = board.get_legal_moves();
 
-    for (uint16_t move : moves)
+    moves_depth_2.resize(moves.size());
+    scores_depth_2.resize(moves.size());
+
+    for (int m_i_1 = 0; m_i_1 < moves.size(); m_i_1++)
     {
-        Bitboards newBoard;
-        newBoard.copy_state(&board);
-        newBoard.make_move(move);
-        std::vector<uint16_t> moves_1 = newBoard.get_legal_moves();
-        depth_1_boards.push_back(newBoard);
-        scores_depth_1.push_back(evaluate(&newBoard, moves_1, moves));
+        Bitboards board1;
+        board1.copy_state(&board);
+        board1.make_move(moves[m_i_1]);
+        std::vector<uint16_t> moves_1 = board1.get_legal_moves();
+        depth_1_boards.push_back(board1);
+        scores_depth_1.push_back(evaluate(&board1, moves_1));
+        moves_depth_2[m_i_1] = moves_1;
     }
 
-    // order moves by score :: Later
-
-    
 
     int hardware_threads = std::thread::hardware_concurrency();
     std::vector<std::thread> threads;
@@ -204,8 +246,10 @@ uint16_t MinMax::get_best_move(std::string fen, int time)
             depth++;
             for (int i = 0; i < hardware_threads; ++i)
             {
-                threads.emplace_back(&MinMax::worker, this, depth, board.get_turn() == 0, moves);
+                threads.emplace_back(&MinMax::worker, this, depth, board.get_turn() == 0);
             }
+            //move ordering:
+            order_Moves();
         }
 
         if (depth_1_done >= (int)depth_1_boards.size())
@@ -245,7 +289,7 @@ uint16_t MinMax::get_best_move(std::string fen, int time)
     return moves[hi];
 }
 
-void MinMax::worker(int depth, bool maximizingPlayer, std::vector<uint16_t> moves_before)
+void MinMax::worker(int depth, bool maximizingPlayer)
 {
     try
     {
@@ -265,7 +309,7 @@ void MinMax::worker(int depth, bool maximizingPlayer, std::vector<uint16_t> move
             if (index < (int)depth_1_boards.size())
             {
 
-                int score = minMax(&depth_1_boards[index], depth, maximizingPlayer, -100000, 100000, moves_before);
+                int score = minMax(&depth_1_boards[index],index, depth, depth, maximizingPlayer, -100000, 100000);
 
                 {
                     std::lock_guard<std::mutex> score_lock(score_mutex);
@@ -281,27 +325,39 @@ void MinMax::worker(int depth, bool maximizingPlayer, std::vector<uint16_t> move
     }
 }
 
-int MinMax::minMax(Bitboards *board, int depth, bool isMaximizingPlayer, int alpha, int beta, std::vector<uint16_t> moves_before)
-
+int MinMax::minMax(Bitboards *board,int index, int depth, int max_depth, bool isMaximizingPlayer, int alpha, int beta)
 {
+    std::vector<uint16_t> moves;
+    if (depth == max_depth)
+    {
+        moves = moves_depth_2[index];
+        scores_depth_2[index].resize(moves.size());
+    }
+    else
+    {
+         moves = board->get_legal_moves();
+    }
 
-    std::vector<uint16_t> moves = board->get_legal_moves();
     if (depth == 0 || !should_continue || moves.empty())
     {
-        return evaluate(board, moves, moves_before);
+        return evaluate(board, moves);
     }
 
     if (isMaximizingPlayer)
     {
         int bestValue = -100000000;
-        for (uint16_t move : moves)
+        for (int m_i = 0; m_i <moves.size(); m_i++ )
         {
             Bitboards newBoard;
             newBoard.copy_state(board);
-            newBoard.make_move(move);
-            int value = minMax(&newBoard, depth - 1, false, alpha, beta, moves);
+            newBoard.make_move(moves[m_i]);
+            int value = minMax(&newBoard,index, depth - 1, max_depth, false, alpha, beta);
             bestValue = std::max(bestValue, value);
             alpha = std::max(alpha, bestValue);
+            if(depth == max_depth)
+            {
+                scores_depth_2[index][m_i] = bestValue;
+            }
             if (beta <= alpha)
                 break; // Beta cut-off
         }
@@ -310,14 +366,18 @@ int MinMax::minMax(Bitboards *board, int depth, bool isMaximizingPlayer, int alp
     else
     {
         int bestValue = 100000000;
-        for (uint16_t move : moves)
+        for (int m_i = 0; m_i <moves.size(); m_i++ )
         {
             Bitboards newBoard;
             newBoard.copy_state(board);
-            newBoard.make_move(move);
-            int value = minMax(&newBoard, depth - 1, true, alpha, beta, moves);
+            newBoard.make_move(moves[m_i]);
+            int value = minMax(&newBoard,index, depth - 1, max_depth, true, alpha, beta);
             bestValue = std::min(bestValue, value);
             beta = std::min(beta, bestValue);
+            if(depth == max_depth)
+            {
+                scores_depth_2[index][m_i] = bestValue;
+            }
             if (beta <= alpha)
                 break; // Alpha cut-off
         }
